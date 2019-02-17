@@ -65,6 +65,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\asl\asldef.hpp" />
+    <ClInclude Include="..\..\..\src\asl\file.hpp" />
     <ClInclude Include="..\..\..\src\asl\socket.hpp" />
     <ClInclude Include="..\..\..\src\asl\system.hpp" />
     <ClInclude Include="..\..\..\src\asl\time.hpp" />
@@ -72,6 +73,7 @@
     <ClInclude Include="..\..\..\src\asl\utils_inc.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\asl\file.cpp" />
     <ClCompile Include="..\..\..\src\asl\socket.cpp" />
     <ClCompile Include="..\..\..\src\asl\system.cpp" />
     <ClCompile Include="..\..\..\src\asl\time.cpp" />
