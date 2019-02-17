@@ -8,7 +8,7 @@
 #include "utils.hpp"
 #include "convert.hpp"
 
-namespace asl {
+namespace ASL_NAMESPACE {
 	JsonNode::JsonNode() {
 	}
 

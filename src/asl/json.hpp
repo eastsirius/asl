@@ -16,7 +16,7 @@
 #include <vector>
 #include <exception>
 
-namespace asl {
+namespace ASL_NAMESPACE {
 	/**
      * @brief JSON节点类型
 	 */

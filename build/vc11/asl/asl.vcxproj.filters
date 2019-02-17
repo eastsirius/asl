@@ -8,6 +8,9 @@
     <Filter Include="asl">
       <UniqueIdentifier>{233049cc-c0b5-412d-a4fd-fdc8c6267eb0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="asl\rapidxml">
+      <UniqueIdentifier>{c2b0d581-3358-474d-aa8f-387855e24f18}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\asl\asldef.hpp">
@@ -43,6 +46,27 @@
     <ClInclude Include="..\..\..\src\asl\json.hpp">
       <Filter>asl</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\rapidxml\rapidxml.hpp">
+      <Filter>asl\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\rapidxml\rapidxml_iterators.hpp">
+      <Filter>asl\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\rapidxml\rapidxml_print.hpp">
+      <Filter>asl\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\rapidxml\rapidxml_utils.hpp">
+      <Filter>asl\rapidxml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\binarchive.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\jsonarchive.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\xmlarchive.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\asl\utils.cpp">
@@ -70,6 +94,15 @@
       <Filter>asl</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\asl\json.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\binarchive.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\jsonarchive.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\xmlarchive.cpp">
       <Filter>asl</Filter>
     </ClCompile>
   </ItemGroup>

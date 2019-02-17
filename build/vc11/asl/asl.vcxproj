@@ -65,9 +65,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\asl\asldef.hpp" />
+    <ClInclude Include="..\..\..\src\asl\binarchive.hpp" />
     <ClInclude Include="..\..\..\src\asl\convert.hpp" />
     <ClInclude Include="..\..\..\src\asl\file.hpp" />
     <ClInclude Include="..\..\..\src\asl\json.hpp" />
+    <ClInclude Include="..\..\..\src\asl\jsonarchive.hpp" />
+    <ClInclude Include="..\..\..\src\asl\rapidxml\rapidxml.hpp" />
+    <ClInclude Include="..\..\..\src\asl\rapidxml\rapidxml_iterators.hpp" />
+    <ClInclude Include="..\..\..\src\asl\rapidxml\rapidxml_print.hpp" />
+    <ClInclude Include="..\..\..\src\asl\rapidxml\rapidxml_utils.hpp" />
     <ClInclude Include="..\..\..\src\asl\serialize.hpp" />
     <ClInclude Include="..\..\..\src\asl\socket.hpp" />
     <ClInclude Include="..\..\..\src\asl\system.hpp" />
@@ -75,17 +81,21 @@
     <ClInclude Include="..\..\..\src\asl\time.hpp" />
     <ClInclude Include="..\..\..\src\asl\utils.hpp" />
     <ClInclude Include="..\..\..\src\asl\utils_inc.hpp" />
+    <ClInclude Include="..\..\..\src\asl\xmlarchive.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\src\asl\binarchive.cpp" />
     <ClCompile Include="..\..\..\src\asl\convert.cpp" />
     <ClCompile Include="..\..\..\src\asl\file.cpp" />
     <ClCompile Include="..\..\..\src\asl\json.cpp" />
+    <ClCompile Include="..\..\..\src\asl\jsonarchive.cpp" />
     <ClCompile Include="..\..\..\src\asl\serialize.cpp" />
     <ClCompile Include="..\..\..\src\asl\socket.cpp" />
     <ClCompile Include="..\..\..\src\asl\system.cpp" />
     <ClCompile Include="..\..\..\src\asl\thread.cpp" />
     <ClCompile Include="..\..\..\src\asl\time.cpp" />
     <ClCompile Include="..\..\..\src\asl\utils.cpp" />
+    <ClCompile Include="..\..\..\src\asl\xmlarchive.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
