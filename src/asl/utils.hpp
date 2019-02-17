@@ -44,11 +44,49 @@ namespace ASL_NAMESPACE {
 	}
 
 	/**
+	 * @brief 交换变量
+	 * @param lhs 左操作数
+	 * @param rhs 右操作数
+	 */
+	template <typename T>
+	static inline void asl_swap(T& lhs, T& rhs) {
+		T tmp = lhs;
+		lhs = rhs;
+		rhs = tmp;
+	}
+
+	/**
 	 * @brief 获取安全字符串
 	 * @return 返回安全字符串
 	 */
 	static inline const char* asl_safe_str(const char* str) {
 		return str ? str : "";
+	}
+
+	/**
+	 * @brief 二分法查找
+	 * @param lst 列表指针(其中元素必须是从小到大排列)
+	 * @param size 列表元素数
+	 * @param key 待匹配元素
+	 * @return 成功返回索引值，失败返回负数
+	 * @warning 必须实现 T == keyT, T > keyT 两种操作
+	 */
+	template <typename T, typename keyT>
+	int binary_search(const T* lst, int size, const keyT& key) {
+		int high = size - 1, low = 0, midle = size / 2;
+		while(high >= low) {
+			midle = (high + low) / 2;
+			if(lst[midle] == key) {
+				return midle;
+			}
+			if(lst[midle] > key) {
+				high = midle - 1;
+			} else {
+				low = midle + 1;
+			}
+		}
+		
+		return -1;
 	}
 
 	/**

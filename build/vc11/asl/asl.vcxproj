@@ -67,6 +67,7 @@
     <ClInclude Include="..\..\..\src\asl\asldef.hpp" />
     <ClInclude Include="..\..\..\src\asl\convert.hpp" />
     <ClInclude Include="..\..\..\src\asl\file.hpp" />
+    <ClInclude Include="..\..\..\src\asl\json.hpp" />
     <ClInclude Include="..\..\..\src\asl\serialize.hpp" />
     <ClInclude Include="..\..\..\src\asl\socket.hpp" />
     <ClInclude Include="..\..\..\src\asl\system.hpp" />
@@ -78,6 +79,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\src\asl\convert.cpp" />
     <ClCompile Include="..\..\..\src\asl\file.cpp" />
+    <ClCompile Include="..\..\..\src\asl\json.cpp" />
     <ClCompile Include="..\..\..\src\asl\serialize.cpp" />
     <ClCompile Include="..\..\..\src\asl\socket.cpp" />
     <ClCompile Include="..\..\..\src\asl\system.cpp" />
