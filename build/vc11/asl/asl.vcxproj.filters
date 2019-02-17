@@ -37,6 +37,9 @@
     <ClInclude Include="..\..\..\src\asl\serialize.hpp">
       <Filter>asl</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\thread.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\asl\utils.cpp">
@@ -58,6 +61,9 @@
       <Filter>asl</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\asl\serialize.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\thread.cpp">
       <Filter>asl</Filter>
     </ClCompile>
   </ItemGroup>

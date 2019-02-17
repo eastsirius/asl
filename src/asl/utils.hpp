@@ -44,6 +44,14 @@ namespace ASL_NAMESPACE {
 	}
 
 	/**
+	 * @brief 获取安全字符串
+	 * @return 返回安全字符串
+	 */
+	static inline const char* asl_safe_str(const char* str) {
+		return str ? str : "";
+	}
+
+	/**
 	 * @brief 不可创建类基类
 	 */
 	class NoCreatable {
