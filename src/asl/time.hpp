@@ -12,7 +12,6 @@
 
 namespace ASL_NAMESPACE {
 	/**
-	 * @class Time
 	 * @brief 时间类
 	 */
 	class Time {
@@ -41,7 +40,6 @@ namespace ASL_NAMESPACE {
 	};
 
 	/**
-	 * @class Datetime
 	 * @brief 日期时间
 	 */
 	class Datetime {
@@ -168,11 +166,9 @@ namespace ASL_NAMESPACE {
 	};
 
 	/**
-	 * @class Timer
 	 * @brief 计时器
 	 */
-	class Timer
-	{
+	class Timer {
 	public:
 		Timer();
 

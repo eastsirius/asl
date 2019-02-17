@@ -44,7 +44,6 @@ namespace ASL_NAMESPACE {
 	}
 
 	/**
-	 * @class NoCreatable
 	 * @brief 不可创建类基类
 	 */
 	class NoCreatable {
@@ -53,7 +52,6 @@ namespace ASL_NAMESPACE {
 	};
 
 	/**
-	 * @class NoCopyable
 	 * @brief 不可拷贝类基类
 	 */
 	class NoCopyable {
@@ -66,7 +64,6 @@ namespace ASL_NAMESPACE {
 	};
 
 	/**
-	 * @class SignalManager
 	 * @brief 信号管理器
 	 */
 	class SignalManager : public NoCopyable, public NoCreatable {
