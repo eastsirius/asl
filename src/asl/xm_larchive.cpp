@@ -1,10 +1,10 @@
 ﻿/**
-* @file xmlarchive.cpp
+* @file xml_archive.cpp
 * @brief XML存档工具
 * @author 程行通
 */
 
-#include "xmlarchive.hpp"
+#include "xml_archive.hpp"
 #include <istream>
 #include <ostream>
 #include "rapidxml/rapidxml_print.hpp"

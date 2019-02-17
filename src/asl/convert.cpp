@@ -34,7 +34,7 @@ namespace ASL_NAMESPACE {
 			return nRet;
 		}
 
-		std::string UnicodeToAnsi(const wchar_t* str) {
+		std::string ConvertHelper::UnicodeToAnsi(const wchar_t* str) {
 			assert(str != NULL);
 			std::string ret;
 #ifdef WINDOWS
@@ -104,7 +104,7 @@ namespace ASL_NAMESPACE {
 			return ret;
 		}
 
-		std::string UnicodeToUtf8(const wchar_t* str) {
+		std::string ConvertHelper::UnicodeToUtf8(const wchar_t* str) {
 			assert(str != NULL);
 			std::string ret;
 #ifdef WINDOWS
@@ -141,7 +141,7 @@ namespace ASL_NAMESPACE {
 			return ret;
 		}
 
-		std::wstring Utf8ToUnicode(const char* str) {
+		std::wstring ConvertHelper::Utf8ToUnicode(const char* str) {
 			assert(str != NULL);
 			std::wstring ret;
 #ifdef WINDOWS

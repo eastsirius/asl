@@ -58,13 +58,16 @@
     <ClInclude Include="..\..\..\src\asl\rapidxml\rapidxml_utils.hpp">
       <Filter>asl\rapidxml</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\asl\binarchive.hpp">
+    <ClInclude Include="..\..\..\src\asl\utest.hpp">
       <Filter>asl</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\asl\jsonarchive.hpp">
+    <ClInclude Include="..\..\..\src\asl\json_archive.hpp">
       <Filter>asl</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\src\asl\xmlarchive.hpp">
+    <ClInclude Include="..\..\..\src\asl\bin_archive.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\xml_archive.hpp">
       <Filter>asl</Filter>
     </ClInclude>
   </ItemGroup>
@@ -96,13 +99,16 @@
     <ClCompile Include="..\..\..\src\asl\json.cpp">
       <Filter>asl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\asl\binarchive.cpp">
+    <ClCompile Include="..\..\..\src\asl\utest.cpp">
       <Filter>asl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\asl\jsonarchive.cpp">
+    <ClCompile Include="..\..\..\src\asl\json_archive.cpp">
       <Filter>asl</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\asl\xmlarchive.cpp">
+    <ClCompile Include="..\..\..\src\asl\bin_archive.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\xm_larchive.cpp">
       <Filter>asl</Filter>
     </ClCompile>
   </ItemGroup>

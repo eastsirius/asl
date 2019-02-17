@@ -1,5 +1,5 @@
 ﻿/**
-* @file xmlarchive.hpp
+* @file xml_archive.hpp
 * @brief XML存档工具
 * @author 程行通
 */

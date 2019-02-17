@@ -59,6 +59,20 @@ namespace ASL_NAMESPACE {
 		static void Write2Byte(uint8_t* buf, const void* value);
 
 		/**
+		 * @brief 反序列化3字节类型
+		 * @param buf 缓冲指针
+		 * @param value 值指针
+		 */
+		static void Read3Byte(const uint8_t* buf, void* value);
+
+		/**
+		 * @brief 序列化3字节类型
+		 * @param buf 缓冲指针
+		 * @param value 值指针
+		 */
+		static void Write3Byte(uint8_t* buf, const void* value);
+
+		/**
 		 * @brief 反序列化4字节类型
 		 * @param buf 缓冲指针
 		 * @param value 值指针
@@ -173,12 +187,12 @@ namespace ASL_NAMESPACE {
 			LengthType_t len = 0;
 			BinSerializer<N>::DoRead(buf, &len);
 
-			if(size < len + N) {
+			if(size < (int)len + N) {
 				return 0;
 			}
-			value.assign((const char*)buf + N, len);
+			value.assign((const char*)buf + N, (int)len);
 
-			return len + N;
+			return (int)len + N;
 		}
 
 		/**
@@ -204,12 +218,12 @@ namespace ASL_NAMESPACE {
 			static_assert(N <= sizeof(std::string::size_type), "length type size too long");
 			assert(buf != NULL && size > 0);
 
-			if(size < N + len) {
+			if(size < N + (int)len) {
 				return 0;
 			}
 
-			LengthType_t len = LengthType_t(len);
-			BinSerializer<N>::DoWrite(buf, &len);
+			LengthType_t len_len = LengthType_t(len);
+			BinSerializer<N>::DoWrite(buf, &len_len);
 			memcpy(buf + N, value, len);
 
 			return len + N;

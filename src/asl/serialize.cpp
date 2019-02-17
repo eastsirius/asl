@@ -32,6 +32,28 @@ namespace ASL_NAMESPACE {
 		*buf = uint8_t((v      ) & 0xFF);
 	}
 
+	void Bin::Read3Byte(const uint8_t* buf, void* value) {
+		uint32_t v = 0;
+		v |= *buf;
+		v <<= 8;
+		++buf;
+		v |= *buf;
+		v <<= 8;
+		++buf;
+		v |= *buf;
+		memcpy(value, &v, 4);
+	}
+
+	void Bin::Write3Byte(uint8_t* buf, const void* value) {
+		uint32_t v = 0;
+		memcpy(&v, value, 4);
+		*buf = uint8_t((v >> 16) & 0xFF);
+		++buf;
+		*buf = uint8_t((v >>  8) & 0xFF);
+		++buf;
+		*buf = uint8_t((v      ) & 0xFF);
+	}
+
 	void Bin::Read4Byte(const uint8_t* buf, void* value) {
 		uint32_t v = 0;
 		v |= *buf;
@@ -88,7 +110,7 @@ namespace ASL_NAMESPACE {
 
 	void Bin::Write8Byte(uint8_t* buf, const void* value) {
 		uint64_t v = 0;
-		memcpy(&value, value, 8);
+		memcpy(&v, value, 8);
 		*buf = uint8_t((v >> 56) & 0xFF);
 		++buf;
 		*buf = uint8_t((v >> 48) & 0xFF);
@@ -112,7 +134,7 @@ namespace ASL_NAMESPACE {
 			NULL,
 			&Bin::Read1Byte,
 			&Bin::Read2Byte,
-			NULL,
+			&Bin::Read3Byte,
 			&Bin::Read4Byte,
 			NULL, NULL, NULL,
 			&Bin::Read8Byte,
@@ -121,7 +143,7 @@ namespace ASL_NAMESPACE {
 			NULL,
 			&Bin::Write1Byte,
 			&Bin::Write2Byte,
-			NULL,
+			&Bin::Write3Byte,
 			&Bin::Write4Byte,
 			NULL, NULL, NULL,
 			&Bin::Write8Byte,

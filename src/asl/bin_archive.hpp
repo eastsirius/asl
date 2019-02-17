@@ -1,5 +1,5 @@
 ﻿/**
-* @file binarchive.hpp
+* @file bin_archive.hpp
 * @brief 二进制存档工具
 * @author 程行通
 */
@@ -14,7 +14,7 @@
 #include <cstring>
 #include <cassert>
 
-namespace asl {
+namespace ASL_NAMESPACE {
 	class BinInputArchive;
 	class BinOutputArchive;
 	namespace helper {

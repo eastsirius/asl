@@ -1,18 +1,17 @@
 ﻿/**
-* @file binarchive.cpp
+* @file bin_archive.cpp
 * @brief 二进制存档工具
 * @author 程行通
-* @copyright Copyright 2015 by Cheng Xingtong
 */
 
-#include "binarchive.hpp"
+#include "bin_archive.hpp"
 #include <istream>
 #include <ostream>
 
 #define ASL_BINOUTPUTARCHINE_BUFSIZE 256 * 1024
 #define ASL_BINOUTPUTARCHINE_GATESIZE 64 * 1024
 
-namespace asl {
+namespace ASL_NAMESPACE {
 	BinArchive::BinArchive() {
 		m_ctxIoContext.pArchive = this;
 	}
