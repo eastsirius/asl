@@ -1,32 +1,20 @@
-# Prerequisites
-*.d
+# Virtual Studio temp files
+*.sdf
+*.opensdf
+*.suo
+Debug
+Release
+ipch
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# QCreater temp files
+*.user
 
-# Precompiled Headers
-*.gch
-*.pch
+# Max os temp files
+.DS_Store
 
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+# External files
+include
+lib
+lib64
+pkgs
+objs
