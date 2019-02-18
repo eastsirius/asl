@@ -104,8 +104,8 @@ namespace ASL_NAMESPACE {
 	namespace helper {
 		typedef void (*BinSerializerReader_t)(const uint8_t*, void*);
 		typedef void (*BinSerializerWriter_t)(uint8_t*, const void*);
-		BinSerializerReader_t g_BinSerializerReaders[];
-		BinSerializerWriter_t g_BinSerializerWriters[];
+		extern BinSerializerReader_t g_BinSerializerReaders[];
+		extern BinSerializerWriter_t g_BinSerializerWriters[];
 	}
 
 	/**

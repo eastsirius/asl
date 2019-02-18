@@ -10,6 +10,7 @@
 #else
 #  include <windows.h>
 #endif
+#include <cstring>
 
 #ifdef UNIX
 #  ifdef APPLE

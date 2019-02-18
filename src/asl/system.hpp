@@ -46,7 +46,6 @@ namespace ASL_NAMESPACE {
 
 	public:
 		/**
-		/**
 		 * @brief 获取错误信息
 		 * @param ec 错误码
 		 * @return 返回错误信息
@@ -74,7 +73,6 @@ namespace ASL_NAMESPACE {
 			return "system";
 		}
 
-		/**
 		/**
 		 * @brief 获取错误信息
 		 * @param ec 错误码
@@ -112,7 +110,6 @@ namespace ASL_NAMESPACE {
 			return "asl";
 		}
 
-		/**
 		/**
 		 * @brief 获取错误信息
 		 * @param ec 错误码

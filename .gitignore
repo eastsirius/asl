@@ -9,6 +9,10 @@ ipch
 # QCreater temp files
 *.user
 
+# CLion temp files
+.idea
+cmake-build-*
+
 # Max os temp files
 .DS_Store
 

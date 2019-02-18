@@ -60,11 +60,11 @@ namespace ASL_NAMESPACE {
 	}
 #else
 	static void _asl_app_signal_manager_on_stop(int sig) {
-		SignalManager::Instance().m_funOnStop();
+		SignalManager::Instance().OnStop();
 	}
 
 	static void _asl_app_signal_manager_on_kill(int sig) {
-		SignalManager::Instance().m_funOnKill();
+		SignalManager::Instance().OnKill();
 	}
 #endif
 

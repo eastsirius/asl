@@ -430,7 +430,7 @@ namespace ASL_NAMESPACE {
 			return false;
 		}
 #else
-		m_hHandle->dir = opendir(szPath);
+		m_hHandle->dir = opendir(path);
 		if(m_hHandle->dir == NULL) {
 			return false;
 		}
@@ -656,7 +656,7 @@ namespace ASL_NAMESPACE {
 			return false;
 		}
 
-		m_nFile = fd;
+		m_hHandle->ctx = fd;
 
 		return true;
 #endif

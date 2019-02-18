@@ -266,7 +266,7 @@ namespace ASL_NAMESPACE {
 		 * @return 返回执行结果
 		 */
 		bool TimedWait(AutoLocker<Mutex>& mtx, int timeout) {
-			return m_hCond.wait_for(mtx, std::chrono::milliseconds(timeout)) != std::_Cv_status::timeout;
+			return m_hCond.wait_for(mtx, std::chrono::milliseconds(timeout)) != std::cv_status::timeout;
 		}
 
 	private:

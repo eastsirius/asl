@@ -13,6 +13,7 @@
 #  include <net/if.h>
 #  include <sys/ioctl.h>
 #  include <errno.h>
+#  include <dlfcn.h>
 #else
 #  include <windows.h>
 #  include <iphlpapi.h>

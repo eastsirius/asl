@@ -14,12 +14,12 @@ ASL_UTEST_SUITE(convert)
 ASL_UTEST_CASE(convert, string_codec_convert) {
 	wchar_t acUTF16Src[] = L"地球人都知道";
     char acUTF8Src[] = {'\xE5', '\x9C', '\xB0', '\xE7', '\x90', '\x83', '\xE4', '\xBA', '\xBA', '\xE9', '\x83', '\xBD', '\xE7', '\x9F',  '\xA5', '\xE9', '\x81', '\x93', '\x00'};
-#ifdef WINDOWS
+//#ifdef WINDOWS
     char acGB2312Src[] = {'\xB5', '\xD8', '\xC7', '\xF2', '\xC8', '\xCB', '\xB6', '\xBC', '\xD6', '\xAA', '\xB5', '\xC0', '\x00'};
     char* acLocalSrc = acGB2312Src;
-#else
-    char* acLocalSrc = acUTF8Src;
-#endif
+//#else
+//    char* acLocalSrc = acUTF8Src;
+//#endif
     
 	{
         std::string strValue = (char*)from_widebyte_cast<ASCID_UTF8>(acUTF16Src);
