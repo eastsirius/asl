@@ -9,6 +9,7 @@
 #include "asldef.hpp"
 #include "utils.hpp"
 #include <cassert>
+#include <cstdint>
 
 namespace ASL_NAMESPACE {
 	/**
@@ -17,23 +18,23 @@ namespace ASL_NAMESPACE {
 	class Buffer : public NoCopyable {
 	public:
 		Buffer();
-		Buffer(size_t nSize);
+		Buffer(size_t size);
 		virtual ~Buffer();
 
 	public:
 		/**
 		 * @brief 创建数据缓冲
-		 * @param nSize 缓冲大小
+		 * @param size 缓冲大小
 		 * @return 返回执行结果
 		 */
-		bool Create(size_t nSize);
+		bool Create(size_t size);
 
 		/**
 		 * @brief 重设数据缓冲
-		 * @param nNewSize 缓冲新大小
+		 * @param new_size 缓冲新大小
 		 * @return 返回执行结果
 		 */
-		bool Recreate(size_t nNewSize);
+		bool Recreate(size_t new_size);
 
 		/**
 		 * @brief 释放数据缓冲
@@ -42,24 +43,24 @@ namespace ASL_NAMESPACE {
 
 		/**
 		 * @brief 追加数据
-		 * @param nSize 数据大小
+		 * @param size 数据大小
 		 * @return 返回执行结果
 		 */
-		bool AppendData(size_t nSize);
+		bool AppendData(size_t size);
 
 		/**
 		 * @brief 追加数据
-		 * @param pData 数据缓存
-		 * @param nSize 数据大小
+		 * @param data 数据缓存
+		 * @param size 数据大小
 		 * @return 返回执行结果
 		 */
-		bool AppendData(const uint8_t* pData, size_t nSize);
+		bool AppendData(const uint8_t* data, size_t size);
 
 		/**
 		 * @brief 跳过数据
-		 * @param nSize 跳过大小
+		 * @param size 跳过大小
 		 */
-		void SkipData(size_t nSize);
+		void SkipData(size_t size);
 
 		/**
 		 * @brief 获取数据大小
@@ -88,13 +89,13 @@ namespace ASL_NAMESPACE {
 
 		/**
 		 * @brief 获取缓冲指针
-		 * @param nOffset 偏移大小
+		 * @param offset 偏移大小
 		 * @return 返回偏移后缓冲指针
 		 */
-		uint8_t* GetBuffer(size_t nOffset = 0) {
+		uint8_t* GetBuffer(size_t offset = 0) {
 			assert(m_pBuffer != NULL);
-			assert(nOffset < m_nBufSize);
-			return m_pBuffer + nOffset;
+			assert(offset < m_nBufSize);
+			return m_pBuffer + offset;
 		}
 
 		/**
@@ -121,15 +122,15 @@ namespace ASL_NAMESPACE {
 	class GrowthBuffer : public Buffer {
 	public:
 		GrowthBuffer();
-		GrowthBuffer(size_t nSize);
+		GrowthBuffer(size_t size);
 		virtual ~GrowthBuffer();
 
 	public:
 		/**
 		 * @brief 请求剩余空间
-		 * @param nSize 剩余空间大小
+		 * @param size 剩余空间大小
 		 * @return 返回执行结果
 		 */
-		bool RequestFreeSize(size_t nSize);
+		bool RequestFreeSize(size_t size);
 	};
 }

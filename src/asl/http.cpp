@@ -7,6 +7,7 @@
 #include "http.hpp"
 #include "inter/http_parser.hpp"
 #include "time.hpp"
+#include "url.hpp"
 #include <cstring>
 
 namespace ASL_NAMESPACE {
@@ -288,79 +289,12 @@ namespace ASL_NAMESPACE {
         return nSize - nFree;
     }
 
-	std::string HttpBase::URLEncode(const char* szSrc, bool bUpperCase) {
-		assert(szSrc != NULL);
-		if(szSrc == NULL) {
-			return "";
-		}
-
-		char baseChar = bUpperCase ? 'A' : 'a';
-		std::vector<uint8_t> lstDest;
-		uint8_t c;
-		uint8_t* pSrc = (uint8_t*)szSrc;
-		while(*pSrc) {
-			c = *pSrc;
-			if(isalpha(c) || isdigit(c) || c == '-' || c == '.' || c == '~') {
-				lstDest.push_back(c);
-			} else if(c == ' ') {
-				lstDest.push_back('+');
-			} else {
-				lstDest.push_back('%');
-				lstDest.push_back(uint8_t((c >= 0xA0) ? ((c >> 4) - 10 + baseChar) : ((c >> 4) + '0')));
-				lstDest.push_back(uint8_t(((c & 0xF) >= 0xA) ? ((c & 0xF) - 10 + baseChar) : ((c & 0xF) + '0')));
-			}
-			++pSrc;
-		}
-		lstDest.push_back(0);
-
-		return (char*)&lstDest[0];
+	std::string HttpBase::UrlEncode(const char* szSrc, bool bUpperCase) {
+		return Url::UrlEncode(szSrc, bUpperCase);
 	}
 
-	std::string HttpBase::URLDecode(const char* szSrc) {
-		assert(szSrc != NULL);
-		if(szSrc == NULL) {
-			return "";
-		}
-
-		uint8_t* pSrc = (unsigned char*)szSrc;
-		std::vector<uint8_t> lstDest;
-		uint8_t c;
-		while(*pSrc) {
-			if(*pSrc == '%') {
-				c = 0;
-
-				//高位
-				if(pSrc[1] >= 'A' && pSrc[1] <= 'F') {
-					c += (pSrc[1] - 'A' + 10) * 0x10;
-				} else if(pSrc[1] >= 'a' && pSrc[1] <= 'f') {
-					c += (pSrc[1] - 'a' + 10) * 0x10;
-				} else {
-					c += (pSrc[1] - '0') * 0x10;
-				}
-
-				//低位
-				if(pSrc[2] >= 'A' && pSrc[2] <= 'F') {
-					c += (pSrc[2] - 'A' + 10);
-				} else if(pSrc[2] >= 'a' && pSrc[2] <= 'f') {
-					c += (pSrc[2] - 'a' + 10);
-				} else {
-					c += (pSrc[2] - '0');
-				}
-
-				lstDest.push_back(c);
-				pSrc += 3;
-			} else if(*pSrc == '+') {
-				lstDest.push_back(' ');
-				++pSrc;
-			} else {
-				lstDest.push_back(*pSrc);
-				++pSrc;
-			}
-		}
-
-		lstDest.push_back(0);
-
-		return (char*)&lstDest[0];
+	std::string HttpBase::UrlDecode(const char* szSrc) {
+		return Url::UrlDecode(szSrc);
 	}
 
     int HttpBase::GetHeaderFieldCount() const {

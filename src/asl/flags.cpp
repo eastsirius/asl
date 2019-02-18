@@ -9,19 +9,19 @@
 #include <cstring>
 
 namespace ASL_NAMESPACE {
-    FlagBase::FlagBase(const char* szKey, const char* szShortKey, const char* szUsage)
-        : m_strKey(szKey), m_strShortKey(szShortKey), m_strUsage(szUsage) {
+    FlagBase::FlagBase(const char* key, const char* short_key, const char* usage)
+        : m_strKey(key), m_strShortKey(short_key), m_strUsage(usage) {
     }
 
     FlagBase::~FlagBase() {
     }
 
-    void FlagBase::PrintUsage(int nKeyLen) const {
-        std::string strKey = _PrintKey(nKeyLen);
+    void FlagBase::PrintUsage(int key_len) const {
+        std::string strKey = _PrintKey(key_len);
         printf("    %s  %s\n", strKey.c_str(), GetUsage().c_str());
     }
 
-    std::string FlagBase::_PrintKey(int nKeyLen) const {
+    std::string FlagBase::_PrintKey(int key_len) const {
         std::string ret;
         if(GetKey().length() > 0) {
             ret += "--";
@@ -35,7 +35,7 @@ namespace ASL_NAMESPACE {
             ret += GetShortKey();
         }
 
-        size_t cnt = nKeyLen - GetKey().length() - GetShortKey().length();
+        size_t cnt = key_len - GetKey().length() - GetShortKey().length();
         for(size_t i = 0; i < cnt; ++i) {
             ret += " ";
         }
@@ -44,18 +44,18 @@ namespace ASL_NAMESPACE {
     }
 
 
-    StringFlag::StringFlag(std::string& strValue, const char* szKey, const char* szShortKey,
-            const char* szUsage, std::string strDefaultValue)
-            : FlagBase(szKey, szShortKey, szUsage), m_strValue(strValue) {
-        m_strValue = strDefaultValue;
+    StringFlag::StringFlag(std::string& value, const char* key, const char* short_key,
+            const char* usage, std::string default_value)
+            : FlagBase(key, short_key, usage), m_strValue(value) {
+        m_strValue = default_value;
     }
 
     StringFlag::~StringFlag() {
     }
 
-    bool StringFlag::ParseFlag(const char* szValue) {
-        if(szValue) {
-            m_strValue = szValue;
+    bool StringFlag::ParseFlag(const char* value) {
+        if(value) {
+            m_strValue = value;
         } else {
             return false;
         }
@@ -64,17 +64,17 @@ namespace ASL_NAMESPACE {
     }
 
 
-    IntFlag::IntFlag(int& nValue, const char* szKey, const char* szShortKey,
-            const char* szUsage, int nDefaultValue) : FlagBase(szKey, szShortKey, szUsage), m_nValue(nValue) {
-        m_nValue = nDefaultValue;
+    IntFlag::IntFlag(int& value, const char* key, const char* short_key,
+            const char* usage, int default_value) : FlagBase(key, short_key, usage), m_nValue(value) {
+        m_nValue = default_value;
     }
 
     IntFlag::~IntFlag() {
     }
 
-    bool IntFlag::ParseFlag(const char* szValue) {
-        if(szValue) {
-            m_nValue = atoi(szValue);
+    bool IntFlag::ParseFlag(const char* value) {
+        if(value) {
+            m_nValue = atoi(value);
         } else {
             return false;
         }
@@ -83,27 +83,27 @@ namespace ASL_NAMESPACE {
     }
 
 
-    BoolFlag::BoolFlag(bool& bValue, const char* szKey, const char* szShortKey,
-            const char* szUsage, bool bDefaultValue) : FlagBase(szKey, szShortKey, szUsage), m_bValue(bValue) {
-        m_bValue = bDefaultValue;
+    BoolFlag::BoolFlag(bool& value, const char* key, const char* short_key,
+            const char* usage, bool default_value) : FlagBase(key, short_key, usage), m_bValue(value) {
+        m_bValue = default_value;
     }
 
     BoolFlag::~BoolFlag() {
     }
 
-    bool BoolFlag::ParseFlag(const char* szValue) {
-        if(szValue) {
-            if(strcasecmp(szValue, "true") == 0) {
+    bool BoolFlag::ParseFlag(const char* value) {
+        if(value) {
+            if(strcasecmp(value, "true") == 0) {
                 m_bValue = true;
-            } else if(strcasecmp(szValue, "false") == 0) {
+            } else if(strcasecmp(value, "false") == 0) {
                 m_bValue = false;
-            } else if(strcasecmp(szValue, "yes") == 0) {
+            } else if(strcasecmp(value, "yes") == 0) {
                 m_bValue = true;
-            } else if(strcasecmp(szValue, "no") == 0) {
+            } else if(strcasecmp(value, "no") == 0) {
                 m_bValue = false;
-            } else if(strcasecmp(szValue, "on") == 0) {
+            } else if(strcasecmp(value, "on") == 0) {
                 m_bValue = true;
-            } else if(strcasecmp(szValue, "off") == 0) {
+            } else if(strcasecmp(value, "off") == 0) {
                 m_bValue = false;
             } else {
                 return false;
@@ -116,17 +116,17 @@ namespace ASL_NAMESPACE {
     }
 
 
-    FloatFlag::FloatFlag(float& fValue, const char* szKey, const char* szShortKey,
-            const char* szUsage, float fDefaultValue) : FlagBase(szKey, szShortKey, szUsage), m_fValue(fValue) {
-        m_fValue = fDefaultValue;
+    FloatFlag::FloatFlag(float& value, const char* key, const char* short_key,
+            const char* usage, float default_value) : FlagBase(key, short_key, usage), m_fValue(value) {
+        m_fValue = default_value;
     }
 
     FloatFlag::~FloatFlag() {
     }
 
-    bool FloatFlag::ParseFlag(const char* szValue) {
-        if(szValue) {
-            m_fValue = (float)atof(szValue);
+    bool FloatFlag::ParseFlag(const char* value) {
+        if(value) {
+            m_fValue = (float)atof(value);
         } else {
             return false;
         }
@@ -199,38 +199,38 @@ namespace ASL_NAMESPACE {
         }
     }
 
-    void Flags::StringValue(std::string& strValue, const char* szKey, const char* szShortKey,
-            const char* szUsage, std::string strDefaultValue) {
-        _AddValue(szKey, szShortKey, new StringFlag(strValue, szKey, szShortKey, szUsage, strDefaultValue));
+    void Flags::StringValue(std::string& value, const char* key, const char* short_key,
+            const char* usage, std::string default_value) {
+        _AddValue(key, short_key, new StringFlag(value, key, short_key, usage, default_value));
     }
 
-    void Flags::IntValue(int& nValue, const char* szKey, const char* szShortKey,
-            const char* szUsage, int nDefaultValue) {
-        _AddValue(szKey, szShortKey, new IntFlag(nValue, szKey, szShortKey, szUsage, nDefaultValue));
+    void Flags::IntValue(int& value, const char* key, const char* short_key,
+            const char* usage, int default_value) {
+        _AddValue(key, short_key, new IntFlag(value, key, short_key, usage, default_value));
     }
 
-    void Flags::BoolValue(bool& bValue, const char* szKey, const char* szShortKey,
-            const char* szUsage, bool bDefaultValue) {
-        _AddValue(szKey, szShortKey, new BoolFlag(bValue, szKey, szShortKey, szUsage, bDefaultValue));
+    void Flags::BoolValue(bool& value, const char* key, const char* short_key,
+            const char* usage, bool default_value) {
+        _AddValue(key, short_key, new BoolFlag(value, key, short_key, usage, default_value));
     }
 
-    void Flags::FloatValue(float& fValue, const char* szKey, const char* szShortKey,
-            const char* szUsage, float fDefaultValue) {
-        _AddValue(szKey, szShortKey, new FloatFlag(fValue, szKey, szShortKey, szUsage, fDefaultValue));
+    void Flags::FloatValue(float& value, const char* key, const char* short_key,
+            const char* usage, float default_value) {
+        _AddValue(key, short_key, new FloatFlag(value, key, short_key, usage, default_value));
     }
 
-    void Flags::_AddValue(const char* szKey, const char* szShortKey, FlagBase* pValue) {
-        FlagPtr_t value(pValue);
-        if(szKey) {
-            m_mpKeyValueMap[szKey] = value;
+    void Flags::_AddValue(const char* key, const char* short_key, FlagBase* value) {
+        FlagPtr_t v(value);
+        if(key) {
+            m_mpKeyValueMap[key] = v;
         }
-        if(szShortKey) {
-            m_mpShortKeyValueMap[szShortKey] = value;
+        if(short_key) {
+            m_mpShortKeyValueMap[short_key] = v;
         }
-        if(szKey) {
-            m_mpValues[szKey] = value;
-        } else if(szShortKey) {
-            m_mpValues[szShortKey] = value;
+        if(key) {
+            m_mpValues[key] = v;
+        } else if(short_key) {
+            m_mpValues[short_key] = v;
         }
     }
 }

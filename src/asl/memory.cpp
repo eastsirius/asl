@@ -10,31 +10,31 @@ namespace ASL_NAMESPACE {
 	Buffer::Buffer() : m_nDataSize(0), m_nBufSize(0), m_pBuffer(NULL) {
 	}
 
-	Buffer::Buffer(size_t nSize) {
+	Buffer::Buffer(size_t size) {
 		Buffer();
-		Create(nSize);
+		Create(size);
 	}
 
 	Buffer::~Buffer() {
 		Release();
 	}
 
-	bool Buffer::Create(size_t nSize) {
+	bool Buffer::Create(size_t size) {
 		Release();
-		return Recreate(nSize);
+		return Recreate(size);
 	}
 
-	bool Buffer::Recreate(size_t nNewSize) {
-		if(m_nDataSize > nNewSize) {
+	bool Buffer::Recreate(size_t new_size) {
+		if(m_nDataSize > new_size) {
 			return false;
 		}
 
-		uint8_t* pNewBuf = (uint8_t*)realloc(m_pBuffer, nNewSize);
+		uint8_t* pNewBuf = (uint8_t*)realloc(m_pBuffer, new_size);
 		if(!pNewBuf) {
 			return false;
 		}
 		m_pBuffer = pNewBuf;
-		m_nBufSize = nNewSize;
+		m_nBufSize = new_size;
 
 		return true;
 	}
@@ -48,26 +48,26 @@ namespace ASL_NAMESPACE {
 		}
 	}
 
-	bool Buffer::AppendData(size_t nSize) {
-		return AppendData(NULL, nSize);
+	bool Buffer::AppendData(size_t size) {
+		return AppendData(NULL, size);
 	}
 
-	bool Buffer::AppendData(const uint8_t* pData, size_t nSize) {
-		if(nSize > GetFreeSize()) {
+	bool Buffer::AppendData(const uint8_t* data, size_t size) {
+		if(size > GetFreeSize()) {
 			return false;
 		}
-		if(pData) {
-			memcpy(GetBuffer(GetDataSize()), pData, nSize);
+		if(data) {
+			memcpy(GetBuffer(GetDataSize()), data, size);
 		}
-		m_nDataSize += nSize;
+		m_nDataSize += size;
 		return true;
 	}
 
-	void Buffer::SkipData(size_t nSize) {
-		size_t size = asl_min(m_nDataSize, nSize);
-		m_nDataSize -= size;
+	void Buffer::SkipData(size_t size) {
+		size_t s = asl_min(m_nDataSize, size);
+		m_nDataSize -= s;
 		if(m_nDataSize > 0) {
-			memmove(m_pBuffer, m_pBuffer + size, m_nDataSize);
+			memmove(m_pBuffer, m_pBuffer + s, m_nDataSize);
 		}
 	}
 
@@ -75,19 +75,19 @@ namespace ASL_NAMESPACE {
 	GrowthBuffer::GrowthBuffer() : Buffer() {
 	}
 
-	GrowthBuffer::GrowthBuffer(size_t nSize) : Buffer(nSize) {
+	GrowthBuffer::GrowthBuffer(size_t size) : Buffer(size) {
 	}
 
 	GrowthBuffer::~GrowthBuffer() {
 		Release();
 	}
 
-	bool GrowthBuffer::RequestFreeSize(size_t nSize) {
-		if(GetFreeSize() >= nSize) {
+	bool GrowthBuffer::RequestFreeSize(size_t size) {
+		if(GetFreeSize() >= size) {
 			return true;
 		}
 
-		size_t nNewDataSize = GetDataSize() + nSize;
+		size_t nNewDataSize = GetDataSize() + size;
 		size_t nNewSize = GetBufferSize();
 		if(nNewSize == 0) {
 			nNewSize = 1024;

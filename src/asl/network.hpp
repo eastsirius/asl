@@ -132,7 +132,9 @@ namespace ASL_NAMESPACE {
         NetAddr(uint32_t dwIP, uint16_t wPort);
         NetAddr(const char* szIP, uint16_t wPort);
         NetAddr(uint16_t wPort);
+#ifdef UNIX
         NetAddr(const char* szSocketName); // AF_UNIX 协议栈
+#endif
         NetAddr(const sockaddr* pAddr, int nLen);
 
     public:
@@ -298,10 +300,10 @@ namespace ASL_NAMESPACE {
     public:
         UDPSocket(NetService& nsNetService, ErrorCode& ec,
                   ReadEventHandler_t funReadEventHandler,
-                  WriteEventHandler_t funWriteEventHandler = NULL);
+                  WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
         UDPSocket(NetService& nsNetService, const NetAddr& naAddr, ErrorCode& ec,
                   ReadEventHandler_t funReadEventHandler,
-                  WriteEventHandler_t funWriteEventHandler = NULL);
+                  WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
         virtual ~UDPSocket();
 
     public:
@@ -360,13 +362,13 @@ namespace ASL_NAMESPACE {
     public:
         TCPSocket(NetService& nsNetService, ErrorCode& ec,
                   ReadEventHandler_t funReadEventHandler,
-                  WriteEventHandler_t funWriteEventHandler = NULL);
+                  WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
         TCPSocket(NetService& nsNetService, SOCKET hSocket, ErrorCode& ec,
                   ReadEventHandler_t funReadEventHandler,
-                  WriteEventHandler_t funWriteEventHandler = NULL);
+                  WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
         TCPSocket(NetService& nsNetService, const NetAddr& naAddr, ErrorCode& ec,
                   ReadEventHandler_t funReadEventHandler,
-                  WriteEventHandler_t funWriteEventHandler = NULL);
+                  WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
         ~TCPSocket();
 
     public:
@@ -457,7 +459,7 @@ namespace ASL_NAMESPACE {
          */
         TCPSocket* Accept(NetService& nsNetService,
                 ReadEventHandler_t funReadEventHandler,
-                WriteEventHandler_t funWriteEventHandler = NULL) {
+                WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t()) {
             ErrorCode ec;
             return Accept(nsNetService, ec, funReadEventHandler, funWriteEventHandler);
         }
@@ -472,7 +474,7 @@ namespace ASL_NAMESPACE {
          */
         TCPSocket* Accept(NetService& nsNetService, ErrorCode& ec,
                 ReadEventHandler_t funReadEventHandler,
-                WriteEventHandler_t funWriteEventHandler = NULL);
+                WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
 
         /**
          * @brief 跳过连接，此时低层会接收并关闭连接

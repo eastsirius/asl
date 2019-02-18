@@ -11,6 +11,9 @@
     <Filter Include="asl\rapidxml">
       <UniqueIdentifier>{c2b0d581-3358-474d-aa8f-387855e24f18}</UniqueIdentifier>
     </Filter>
+    <Filter Include="asl\inter">
+      <UniqueIdentifier>{0affbecb-f405-442b-9961-7e7b69bb7b51}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\asl\asldef.hpp">
@@ -70,6 +73,30 @@
     <ClInclude Include="..\..\..\src\asl\xml_archive.hpp">
       <Filter>asl</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\flags.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\http.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\log.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\memory.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\net_server.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\network.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\url.hpp">
+      <Filter>asl</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\asl\inter\http_parser.hpp">
+      <Filter>asl\inter</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\asl\utils.cpp">
@@ -110,6 +137,30 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\asl\xm_larchive.cpp">
       <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\flags.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\http.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\log.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\memory.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\net_server.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\network.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\url.cpp">
+      <Filter>asl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\asl\inter\http_parser.cpp">
+      <Filter>asl\inter</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

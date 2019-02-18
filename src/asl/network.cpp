@@ -9,8 +9,11 @@
 #include "system.hpp"
 #include <cassert>
 #include <cstring>
-#include <netdb.h>
-#include <thread>
+#ifdef WINDOWS
+#  include <ws2tcpip.h>
+#else
+#  include <netdb.h>
+#endif
 
 #ifdef WINDOWS
 #  define ASL_NETSERVICE_USE_SELECT 1
@@ -183,11 +186,11 @@ namespace ASL_NAMESPACE {
         FD_ZERO(&writeSet);
         for(auto iter = m_mpReadHandlerMap.begin(); iter != m_mpReadHandlerMap.end(); ++iter) {
             FD_SET(iter->first, &readSet);
-            max_fd = SUL_MAX(max_fd, iter->first);
+			max_fd = asl_max(max_fd, (int)iter->first);
         }
         for(auto iter = m_mpWriteHandlerMap.begin(); iter != m_mpWriteHandlerMap.end(); ++iter) {
             FD_SET(iter->first, &writeSet);
-            max_fd = SUL_MAX(max_fd, iter->first);
+            max_fd = asl_max(max_fd, (int)iter->first);
         }
 
         timeval tv = {0};
@@ -281,7 +284,9 @@ namespace ASL_NAMESPACE {
         {
             sockaddr addr;
             sockaddr_in addr_in;
+#ifdef UNIX
             sockaddr_un addr_un;
+#endif
         };	///< socket地址
     };
 
@@ -296,30 +301,35 @@ namespace ASL_NAMESPACE {
         memcpy(m_pContext, naAddr.m_pContext, sizeof(NetAddrContext_t));
     }
 
-    NetAddr::NetAddr(uint32_t dwIP, uint16_t wPort) : NetAddr() {
+    NetAddr::NetAddr(uint32_t dwIP, uint16_t wPort) {
+		NetAddr();
         m_pContext->addr_in.sin_family = AF_INET;
         m_pContext->addr_in.sin_addr.s_addr = dwIP;
         m_pContext->addr_in.sin_port = htons(wPort);
     }
 
-    NetAddr::NetAddr(const char* szIP, uint16_t wPort) : NetAddr(){
+    NetAddr::NetAddr(const char* szIP, uint16_t wPort) {
+		NetAddr();
         m_pContext->addr_in.sin_family = AF_INET;
         m_pContext->addr_in.sin_addr.s_addr = inet_addr(szIP);
         m_pContext->addr_in.sin_port = htons(wPort);
     }
 
-    NetAddr::NetAddr(uint16_t wPort) : NetAddr() {
+    NetAddr::NetAddr(uint16_t wPort) {
+		NetAddr();
         m_pContext->addr_in.sin_family = AF_INET;
         m_pContext->addr_in.sin_addr.s_addr = INADDR_ANY;
         m_pContext->addr_in.sin_port = htons(wPort);
     }
-
-    NetAddr::NetAddr(const char* szSocketName) : NetAddr(){
+#ifdef UNIX
+    NetAddr::NetAddr(const char* szSocketName) {
+		NetAddr();
         m_pContext->addr_un.sun_family = AF_UNIX;
         snprintf(m_pContext->addr_un.sun_path, sizeof(m_pContext->addr_un.sun_path) - 1, szSocketName);
     }
-
-    NetAddr::NetAddr(const sockaddr* pAddr, int nLen) : NetAddr() {
+#endif
+    NetAddr::NetAddr(const sockaddr* pAddr, int nLen) {
+		NetAddr();
         assert(nLen <= (int)sizeof(*m_pContext));
         memcpy(m_pContext, pAddr, nLen);
     }
@@ -338,9 +348,11 @@ namespace ASL_NAMESPACE {
             case AF_INET:
                 nLen = sizeof(sockaddr_in);
                 break;
+#ifdef UNIX
             case AF_UNIX:
                 nLen = sizeof(sockaddr_un);
                 break;
+#endif
             default:
                 break;
         }
@@ -363,7 +375,7 @@ namespace ASL_NAMESPACE {
     }
 
     std::string NetAddr::IPToString() const {
-        assert(m_saAddr.addr.sa_family == AF_INET);
+        assert(m_pContext->addr.sa_family == AF_INET);
         uint8_t ucIP[4];
         char acBuffer[16];
         memcpy(ucIP, &m_pContext->addr_in.sin_addr, 4);
@@ -378,11 +390,13 @@ namespace ASL_NAMESPACE {
                 char acBuffer[32];
                 sprintf(acBuffer, "%s:%d", strIP.c_str(), (int)GetPort());
                 return acBuffer;
-            }
+				}
                 break;
+#ifdef UNIX
             case AF_UNIX:
                 return m_pContext->addr_un.sun_path;
                 break;
+#endif
             default:
                 assert(false);
                 break;
@@ -459,7 +473,7 @@ namespace ASL_NAMESPACE {
         if(pAddr != NULL) {
             int flag = 1;
             socklen_t len = sizeof(int);
-            if(setsockopt(m_hSocket, SOL_SOCKET, SO_REUSEADDR, &flag, len) != 0)  {
+            if(setsockopt(m_hSocket, SOL_SOCKET, SO_REUSEADDR, (const char*)&flag, len) != 0)  {
                 ec = ErrorCode::GetLastSystemError();
                 m_hSocket.Release();
                 return false;
@@ -493,7 +507,7 @@ namespace ASL_NAMESPACE {
             this->_OnWrite();
         };
         if(!bWriteEvent) {
-            writeHandler = NULL;
+			writeHandler = NetService::Handler_t();
         }
         if(!m_nsNetService.Add(m_hSocket, readHeader, writeHandler)) {
             ec = AslError(AECV_BindSocketError);
@@ -521,10 +535,10 @@ namespace ASL_NAMESPACE {
             this->_OnWrite();
         };
         if(!bReadEvent) {
-            readHeader = NULL;
+            readHeader = NetService::Handler_t();
         }
         if(!bWriteEvent) {
-            writeHandler = NULL;
+            writeHandler = NetService::Handler_t();
         }
         m_nsNetService.Modify(m_hSocket, readHeader, writeHandler);
     }
@@ -626,7 +640,7 @@ namespace ASL_NAMESPACE {
         ErrorCode ec;
         int error;
         socklen_t len = sizeof(error);
-        if(getsockopt(m_hSocket, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
+        if(getsockopt(m_hSocket, SOL_SOCKET, SO_ERROR, (char*)&error, &len) < 0) {
             ec = ErrorCode::GetLastSystemError();
             if(!ec) {
                 ec = AslError(AECV_Error);
@@ -665,7 +679,7 @@ namespace ASL_NAMESPACE {
     TCPAcceptor::TCPAcceptor(NetService& nsNetService, const NetAddr& naAddr, ErrorCode& ec,
             ReadEventHandler_t funReadEventHandler)
             : NetSocket(nsNetService) {
-        _SetHandler(funReadEventHandler, NULL);
+        _SetHandler(funReadEventHandler, ReadEventHandler_t());
         _CreateSocket(INVALID_SOCKET, true, true, &naAddr, false, ec);
     }
 
@@ -676,7 +690,7 @@ namespace ASL_NAMESPACE {
     TCPSocket* TCPAcceptor::Accept(NetService& nsNetService, ErrorCode& ec,
             ReadEventHandler_t funReadEventHandler,
             WriteEventHandler_t funWriteEventHandler) {
-        assert(pReadEventHandler != NULL);
+        assert(funReadEventHandler != NULL);
 
         SOCKET hSocket = _DoAccept(ec);
         if(hSocket == INVALID_SOCKET) {

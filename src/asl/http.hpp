@@ -46,14 +46,14 @@ namespace ASL_NAMESPACE {
 		 * @param szSrc 源字符串
 		 * @return 返回编码后字符串
 		 */
-		static std::string URLEncode(const char* szSrc, bool bUpperCase = true);
+		static std::string UrlEncode(const char* szSrc, bool bUpperCase = true);
 
 		/**
 		 * @brief URL解码
 		 * @param szSrc 源字符串
 		 * @return 返回解码后字符串
 		 */
-		static std::string URLDecode(const char* szSrc);
+		static std::string UrlDecode(const char* szSrc);
 
     public:
         /**
