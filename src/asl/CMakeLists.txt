@@ -9,6 +9,7 @@ set(ASL_LINK_LIBRARIES )
 set(ASL_SRC_BASE ${ASL_ROOT_PATH}/src)
 set(ASL_SRC_FILES )
 aux_source_directory(${ASL_SRC_BASE}/asl ASL_SRC_FILES)
+aux_source_directory(${ASL_SRC_BASE}/asl/inter ASL_SRC_FILES)
 
 include_directories(${ASL_INCLUDE_PATH})
 link_directories(${ASL_LIBRARY_PATH})

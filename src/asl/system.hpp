@@ -86,6 +86,7 @@ namespace ASL_NAMESPACE {
 	 */
 	enum AslErrorCodeValue_t {
 		AECV_NoError	= 0,
+		AECV_Error,
 		AECV_AllocContextError,
 		AECV_OpTimeout,
 		AECV_Reconnect,
@@ -125,6 +126,7 @@ namespace ASL_NAMESPACE {
 	class ErrorCode {
 	public:
 		ErrorCode();
+		ErrorCode(const ErrorCode& ec);
 		ErrorCode(int ec, ErrorDesc* desc);
 
 	public:
@@ -157,8 +159,8 @@ namespace ASL_NAMESPACE {
 		}
 
 	private:
-		const int m_nCode;
-		const ErrorDescPtr_t m_pDesc;
+		int m_nCode;
+		ErrorDescPtr_t m_pDesc;
 	};
 
 	static inline ErrorCode SystemError(int ec) {

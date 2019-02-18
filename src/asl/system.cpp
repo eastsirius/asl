@@ -98,6 +98,9 @@ namespace ASL_NAMESPACE {
 
 	const char* AslErrorDesc::GetMsg(int ec) const {
 		switch(ec) {
+		case AECV_Error:
+			return "error";
+			break;
 		case AECV_AllocContextError:
 			return "error when alloc context";
 			break;
@@ -122,6 +125,9 @@ namespace ASL_NAMESPACE {
 
 
 	ErrorCode::ErrorCode() : m_nCode(0) {
+	}
+
+	ErrorCode::ErrorCode(const ErrorCode& ec) : m_nCode(ec.m_nCode), m_pDesc(ec.m_pDesc) {
 	}
 
 	ErrorCode::ErrorCode(int ec, ErrorDesc* desc) : m_nCode(ec), m_pDesc(desc) {
