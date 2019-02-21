@@ -55,6 +55,18 @@ namespace ASL_NAMESPACE {
 			return m_strHost;
 		}
 		/**
+		 * @brief 获取用户名
+		 */
+		const std::string& GetUser() const {
+			return m_strUser;
+		}
+		/**
+		 * @brief 获取密码
+		 */
+		const std::string& GetPwd() const {
+			return m_strPwd;
+		}
+		/**
 		 * @brief 获取端口
 		 */
 		int GetPort() const {
@@ -122,6 +134,8 @@ namespace ASL_NAMESPACE {
 
 		std::string m_strProtocol;	///< 协议名
 		std::string m_strHost;		///< 主机名
+		std::string m_strUser;		///< 用户名
+		std::string m_strPwd;		///< 密码
 		int m_nPort;				///< 端口
 		std::string m_strPath;		///< 路径
 		std::map<std::string, std::string> m_mpAttrs;	///< 参数列表

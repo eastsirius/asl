@@ -128,9 +128,18 @@ namespace ASL_NAMESPACE {
 
 		if(connect(m_hSocket, addr, addr_len) == 0) {
 			return true;
-		} else {
+		}
+
+#ifdef WINDOWS
+		if(GetLastError() != WSAEWOULDBLOCK)
+#else
+		if(errno != EINPROGRESS)
+#endif
+		{
 			return false;
 		}
+
+		return true;
 	}
 
 	bool Socket::Connect(const char* ip, int port) {

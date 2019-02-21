@@ -37,6 +37,21 @@ namespace ASL_NAMESPACE {
 			temp = "";
 		}
 
+		std::string::size_type user_pwd_end_pos = addr.find_first_of("@");
+		std::string user, pwd;
+		if(user_pwd_end_pos != std::string::npos) {
+			std::string user_pwd(addr.begin(), addr.begin() + user_pwd_end_pos);
+			addr = std::string(addr.begin() + user_pwd_end_pos + 1, addr.end());
+
+			std::string::size_type user_end_pos = user_pwd.find_first_of(":");
+			if(user_end_pos == std::string::npos) {
+				user = user_pwd;
+			} else {
+				user = std::string(user_pwd.begin(), user_pwd.begin() + user_end_pos);
+				pwd = std::string(user_pwd.begin() + user_end_pos + 1, user_pwd.end());
+			}
+		}
+
 		std::string::size_type host_end_pos = addr.find_first_of(":");
 		std::string host;
 		int port;
@@ -65,6 +80,8 @@ namespace ASL_NAMESPACE {
 		m_strUrl = url;
 		m_strProtocol = protocol;
 		m_strHost = host;
+		m_strUser = user;
+		m_strPwd = pwd;
 		m_nPort = port;
 		m_strPath = path;
 
