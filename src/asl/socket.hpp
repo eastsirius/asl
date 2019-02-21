@@ -79,6 +79,13 @@ namespace ASL_NAMESPACE {
 		bool Bind(int port, const char* ip = 0);
 
 		/**
+		 * @brief 绑定地址
+		 * @param addr 对端地址(格式: [ip:port],[port])
+		 * @return 返回执行结果
+		 */
+		bool Bind(const char* addr);
+
+		/**
 		 * @brief 开始监听
 		 * @param back_log 队列长度
 		 * @return 返回执行结果
@@ -108,6 +115,13 @@ namespace ASL_NAMESPACE {
 		bool Connect(const char* ip, int port);
 
 		/**
+		 * @brief 建立连接
+		 * @param addr 对端地址(格式: [ip:port],[port])
+		 * @return 返回执行结果
+		 */
+		bool Connect(const char* addr);
+
+		/**
 		 * @brief 带计时的建立连接(非阻塞模式下有效)
 		 * @param addr 对端地址指针
 		 * @param addr_len 对端地址大小
@@ -124,6 +138,14 @@ namespace ASL_NAMESPACE {
 		 * @return 返回执行结果
 		 */
 		bool TimedConnect(const char* ip, int port, int timeout);
+
+		/**
+		 * @brief 带计时的建立连接(非阻塞模式下有效)
+		 * @param addr 对端地址(格式: [ip:port],[port])
+		 * @param timeout 毫秒超时时间
+		 * @return 返回执行结果
+		 */
+		bool TimedConnect(const char* addr, int timeout);
 
 		/**
 		 * @brief 发送流数据

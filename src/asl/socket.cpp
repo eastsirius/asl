@@ -94,6 +94,16 @@ namespace ASL_NAMESPACE {
 		return Bind((const sockaddr*)&addr, sizeof(addr));
 	}
 
+	bool Socket::Bind(const char* addr) {
+		std::string src(addr);
+		auto pos = src.find_last_of(':');
+		if(pos == std::string::npos) {
+			return Bind(atoi(addr));
+		} else {
+			return Bind(atoi(addr + pos + 1), std::string(addr, pos).c_str());
+		}
+	}
+
 	bool Socket::Listen(int back_log) {
 		assert(!IsEmpty());
 
@@ -123,18 +133,28 @@ namespace ASL_NAMESPACE {
 		}
 	}
 
-	bool Socket::Connect(const char* back_log, int port) {
-		assert(back_log != NULL && port > 0u);
+	bool Socket::Connect(const char* ip, int port) {
+		assert(ip != NULL && port > 0u);
 
 		sockaddr_in addr = {0};
 		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = inet_addr(back_log);
+		addr.sin_addr.s_addr = inet_addr(ip);
 		if(addr.sin_addr.s_addr == INADDR_NONE) {
 			return false;
 		}
 		addr.sin_port = htons(port);
 
 		return Connect((const sockaddr*)&addr, sizeof(addr));
+	}
+
+	bool Socket::Connect(const char* addr) {
+		std::string src(addr);
+		auto pos = src.find_last_of(':');
+		if(pos == std::string::npos) {
+			return false;
+		} else {
+			return Connect(std::string(addr, pos).c_str(), atoi(addr + pos + 1));
+		}
 	}
 
 	bool Socket::TimedConnect(const sockaddr* addr, int addr_len, int timeout) {
@@ -160,18 +180,28 @@ namespace ASL_NAMESPACE {
 		}
 	}
 
-	bool Socket::TimedConnect(const char* szIP, int port, int timeout) {
-		assert(szIP != NULL && port > 0u);
+	bool Socket::TimedConnect(const char* ip, int port, int timeout) {
+		assert(ip != NULL && port > 0u);
 
 		sockaddr_in addr = {0};
 		addr.sin_family = AF_INET;
-		addr.sin_addr.s_addr = inet_addr(szIP);
+		addr.sin_addr.s_addr = inet_addr(ip);
 		if(addr.sin_addr.s_addr == INADDR_NONE) {
 			return false;
 		}
 		addr.sin_port = htons(port);
 
 		return TimedConnect((const sockaddr*)&addr, sizeof(addr), timeout);
+	}
+
+	bool Socket::TimedConnect(const char* addr, int timeout) {
+		std::string src(addr);
+		auto pos = src.find_last_of(':');
+		if(pos == std::string::npos) {
+			return false;
+		} else {
+			return TimedConnect(std::string(addr, pos).c_str(), atoi(addr + pos + 1), timeout);
+		}
 	}
 
 	int Socket::Send(const char* buf, int size) {

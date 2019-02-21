@@ -68,7 +68,8 @@ namespace ASL_NAMESPACE {
          * @param funWriteHandler 写事件句柄
 		 * @return 返回执行结果
 		 */
-        bool Add(SOCKET nSocket, Handler_t funReadHandler, Handler_t funWriteHandler);
+        bool Add(SOCKET nSocket, Handler_t funReadHandler,
+                Handler_t funWriteHandler = Handler_t());
 
         /**
 		 * @brief 编辑套接字
@@ -77,7 +78,8 @@ namespace ASL_NAMESPACE {
          * @param funWriteHandler 写事件句柄
 		 * @return 返回执行结果
 		 */
-        bool Modify(SOCKET nSocket, Handler_t funReadHandler, Handler_t funWriteHandler);
+        bool Modify(SOCKET nSocket, Handler_t funReadHandler,
+                Handler_t funWriteHandler = Handler_t());
 
         /**
 		 * @brief 移除套接字
