@@ -189,6 +189,12 @@ namespace ASL_NAMESPACE {
         std::string ToString() const;
 
     private:
+        /**
+         * @brief 初始化
+         */
+        void _Init();
+
+    private:
         struct NetAddrContext_t* m_pContext; ///< socket地址
     };
 

@@ -62,7 +62,7 @@ namespace ASL_NAMESPACE {
             } else {
                 int nPos = strAddr.find(":");
                 strIP = std::string(strAddr.begin(), strAddr.begin() + nPos);
-                std::string strPort(strAddr.begin() + 1, strAddr.end());
+                std::string strPort(strAddr.begin() + nPos + 1, strAddr.end());
                 nPort = atoi(strPort.c_str());
             }
 
@@ -75,7 +75,7 @@ namespace ASL_NAMESPACE {
                 this->_OnListenerRead((TCPAcceptor*)pSocket);
             };
             std::shared_ptr<TCPAcceptor> pSocket = std::make_shared<TCPAcceptor>(m_nsNetService,
-                    NetAddr(strAddr.c_str(), nPort), ec, handler);
+                    NetAddr(strIP.c_str(), nPort), ec, handler);
             if(ec) {
                 return false;
             }

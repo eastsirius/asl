@@ -291,45 +291,44 @@ namespace ASL_NAMESPACE {
     };
 
 
-    NetAddr::NetAddr() : m_pContext(NULL) {
-        m_pContext = (NetAddrContext_t*)calloc(1, sizeof(NetAddrContext_t));
-        m_pContext->addr_in.sin_family = AF_INET;
+    NetAddr::NetAddr() {
+        _Init();
     }
 
     NetAddr::NetAddr(const NetAddr& naAddr) {
-        m_pContext = (NetAddrContext_t*)calloc(1, sizeof(NetAddrContext_t));
+        _Init();
         memcpy(m_pContext, naAddr.m_pContext, sizeof(NetAddrContext_t));
     }
 
     NetAddr::NetAddr(uint32_t dwIP, uint16_t wPort) {
-		NetAddr();
+        _Init();
         m_pContext->addr_in.sin_family = AF_INET;
         m_pContext->addr_in.sin_addr.s_addr = dwIP;
         m_pContext->addr_in.sin_port = htons(wPort);
     }
 
     NetAddr::NetAddr(const char* szIP, uint16_t wPort) {
-		NetAddr();
+        _Init();
         m_pContext->addr_in.sin_family = AF_INET;
         m_pContext->addr_in.sin_addr.s_addr = inet_addr(szIP);
         m_pContext->addr_in.sin_port = htons(wPort);
     }
 
     NetAddr::NetAddr(uint16_t wPort) {
-		NetAddr();
+        _Init();
         m_pContext->addr_in.sin_family = AF_INET;
         m_pContext->addr_in.sin_addr.s_addr = INADDR_ANY;
         m_pContext->addr_in.sin_port = htons(wPort);
     }
 #ifdef UNIX
     NetAddr::NetAddr(const char* szSocketName) {
-		NetAddr();
+        _Init();
         m_pContext->addr_un.sun_family = AF_UNIX;
         snprintf(m_pContext->addr_un.sun_path, sizeof(m_pContext->addr_un.sun_path) - 1, szSocketName);
     }
 #endif
     NetAddr::NetAddr(const sockaddr* pAddr, int nLen) {
-		NetAddr();
+        _Init();
         assert(nLen <= (int)sizeof(*m_pContext));
         memcpy(m_pContext, pAddr, nLen);
     }
@@ -403,6 +402,11 @@ namespace ASL_NAMESPACE {
         }
 
         return "";
+    }
+
+    void NetAddr::_Init() {
+        m_pContext = (NetAddrContext_t*)calloc(1, sizeof(NetAddrContext_t));
+        m_pContext->addr_in.sin_family = AF_INET;
     }
 
 
