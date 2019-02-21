@@ -10,8 +10,7 @@ namespace ASL_NAMESPACE {
 	Buffer::Buffer() : m_nDataSize(0), m_nBufSize(0), m_pBuffer(NULL) {
 	}
 
-	Buffer::Buffer(size_t size) {
-		Buffer();
+	Buffer::Buffer(size_t size) : m_nDataSize(0), m_nBufSize(0), m_pBuffer(NULL) {
 		Create(size);
 	}
 
