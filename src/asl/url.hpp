@@ -99,6 +99,12 @@ namespace ASL_NAMESPACE {
 		 */
 		const std::string& GetAttr(const char* key) const;
 
+		/**
+		 * @brief 获取不带用户名密码的URL
+		 * @return 返回URL
+		 */
+		std::string GetNoUserPwdUrl() const;
+
 	public:
 		/**
 		 * @brief 获取协议端口

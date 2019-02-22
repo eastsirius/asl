@@ -102,6 +102,26 @@ namespace ASL_NAMESPACE {
 		}
 	}
 
+	std::string Url::GetNoUserPwdUrl() const {
+		if(GetUser() == "") {
+			return m_strUrl;
+		}
+
+		std::string key = GetUser();
+		if(GetPwd() != "") {
+			key += ":";
+			key += GetPwd();
+		}
+		key += "@";
+		auto pos = m_strUrl.find(key.c_str());
+		if(pos == std::string::npos) {
+			return m_strUrl;
+		}
+
+		return std::string(m_strUrl.begin(), m_strUrl.begin() + pos)
+			+ std::string(m_strUrl.begin() + pos + key.length(), m_strUrl.end());
+	}
+
 	int Url::GetProtocolPort(const char* protocol) {
 		// TODO
 		if(strcasecmp(protocol, "rtsp") == 0) {
