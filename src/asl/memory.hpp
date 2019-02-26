@@ -8,8 +8,11 @@
 
 #include "asldef.hpp"
 #include "utils.hpp"
+#include "thread.hpp"
+#include "time.hpp"
 #include <cassert>
 #include <cstdint>
+#include <map>
 
 namespace ASL_NAMESPACE {
 	/**
@@ -132,5 +135,116 @@ namespace ASL_NAMESPACE {
 		 * @return 返回执行结果
 		 */
 		bool RequestFreeSize(size_t size);
+	};
+
+	/**
+     * @brief 带超时的上下文表实现
+     */
+	template <class KeyT, class ValueT, class MutexT>
+	class TimedSessionMapImpl : public NoCopyable {
+	public:
+        TimedSessionMapImpl(){}
+
+		struct ValueSession {
+		    ValueT value;
+		    Timer timer;
+		    int timeout;
+		};
+
+	public:
+        /**
+         * @brief 放入项
+         * @param key 键值
+         * @param value 项值
+         * @param timeout 毫秒超时时间
+         */
+		void Put(const KeyT key, ValueT value, int timeout) {
+		    AutoLocker<MutexT> lock(m_mtxLock);
+            ValueSession session;
+            session.value = value;
+            session.timer.Restart();
+            session.timeout = timeout;
+		    m_mpValueMap[key] = session;
+		}
+
+        /**
+         * @brief 获取项
+         * @param key 键值
+         * @param reset_timer 是否重置计时器
+         * @return 返回项值
+         */
+		ValueT Get(const KeyT key, bool reset_timer = false) {
+            AutoLocker<MutexT> lock(m_mtxLock);
+            auto iter = m_mpValueMap.find(key);
+            if(iter == m_mpValueMap.end()) {
+                return ValueT();
+            } else if(iter->second.timer.MillisecTime() > iter->second.timeout) {
+                m_mpValueMap.erase(iter);
+                return ValueT();
+            } else {
+                return iter->second.value;
+            }
+		}
+
+        /**
+         * @brief 删除项
+         */
+		void Delete(const KeyT key) {
+            AutoLocker<MutexT> lock(m_mtxLock);
+            m_mpValueMap.erase(key);
+		}
+
+        /**
+         * @brief 检测项是否存在
+         * @return 返回检测结果
+         */
+		bool Exist(const KeyT key) {
+            AutoLocker<MutexT> lock(m_mtxLock);
+		    auto iter = m_mpValueMap.find(key);
+		    if(iter == m_mpValueMap.end()) {
+		        return false;
+		    } else if(iter->second.timer.MillisecTime() > iter->second.timeout) {
+		        m_mpValueMap.erase(iter);
+		        return false;
+		    } else {
+		        return true;
+		    }
+		}
+
+		/**
+		 * @brief 执行生命周期检查
+		 */
+		void WorkProc() {
+            AutoLocker<MutexT> lock(m_mtxLock);
+            for(auto iter = m_mpValueMap.begin(); iter != m_mpValueMap.end();) {
+                if(iter->second.timer.MillisecTime() > iter->second.timeout) {
+                    iter = m_mpValueMap.erase(iter);
+                    continue;
+                }
+                ++iter;
+            }
+		}
+
+	private:
+	    MutexT m_mtxLock;
+	    std::map<KeyT, ValueT> m_mpValueMap;
+	};
+
+	/**
+     * @brief 带超时的上下文表
+     */
+	template <class KeyT, class ValueT>
+	class TimedSessionMap : public TimedSessionMapImpl<KeyT, ValueT, NullMutex> {
+	public:
+        TimedSessionMap(){}
+	};
+
+	/**
+     * @brief 线程安全的带超时的上下文表
+     */
+	template <class KeyT, class ValueT>
+	class ThreadSafeTimedSessionMap : public TimedSessionMapImpl<KeyT, ValueT, Mutex> {
+	public:
+        ThreadSafeTimedSessionMap(){}
 	};
 }

@@ -219,7 +219,7 @@ namespace ASL_NAMESPACE {
 		do {
 			pos = p.find_first_of("/");
 			if(pos == std::string::npos) {
-				lhs = path;
+				lhs = p;
 				rhs = "";
 			} else {
 				lhs = std::string(p.begin(), p.begin() + pos);
