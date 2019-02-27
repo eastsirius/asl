@@ -204,12 +204,11 @@ namespace ASL_NAMESPACE {
      */
     class NetSocket : public NoCopyable {
     public:
-        NetSocket(NetService& nsNetService);
+        NetSocket();
         virtual ~NetSocket();
 
-        typedef std::function<void(NetSocket* pSocket)> ReadEventHandler_t;		///< 读事件处理句柄
-        typedef std::function<void(NetSocket* pSocket)> WriteEventHandler_t;	///< 写事件处理句柄
-        typedef std::function<void(NetSocket* pSocket, ErrorCode ec)> ConnectEventHandler_t;	///< 连接事件处理句柄
+        typedef NetService::Handler_t ReadWriteHandler_t; ///< 读写事件处理句柄
+        typedef std::function<void(ErrorCode ec)> ConnectEventHandler_t; ///< 连接事件处理句柄
 
     public:
         /**
@@ -217,6 +216,29 @@ namespace ASL_NAMESPACE {
          * @return 返回系统套接字
          */
         const Socket& GetSocket() const;
+
+        /**
+         * @brief 绑定事件回调
+         * @param nsNetService 传输服务
+         * @param funReadEventHandler 读事件处理函数
+         * @param funWriteEventHandler 写事件处理函数
+         * @return 返回执行结果
+         */
+        virtual bool BindEventHandler(NetService& nsNetService, ReadWriteHandler_t funReadEventHandler,
+                ReadWriteHandler_t funWriteEventHandler = ReadWriteHandler_t());
+
+        /**
+         * @brief 解绑事件回调
+         */
+        virtual void UnbindEventHandler();
+
+        /**
+         * @brief 修改事件回调
+         * @param funReadEventHandler 读事件处理函数
+         * @param funWriteEventHandler 写事件处理函数
+         */
+        virtual void ModifyEventHandler(ReadWriteHandler_t funReadEventHandler,
+                ReadWriteHandler_t funWriteEventHandler = ReadWriteHandler_t());
 
         /**
 		 * @brief 设置发送缓冲大小
@@ -249,16 +271,6 @@ namespace ASL_NAMESPACE {
          */
         void Close();
 
-        /**
-         * @brief 读事件处理函数
-         */
-        void _OnRead();
-
-        /**
-         * @brief 写事件处理函数
-         */
-        void _OnWrite();
-
     protected:
         /**
          * @brief 获取本地套接字地址
@@ -266,38 +278,14 @@ namespace ASL_NAMESPACE {
          * @param bStream 是否为流模式
          * @param bAcceptor 是否为TCP连接器
          * @param pAddr 绑定地址，NULL使用随机分配
-         * @param bWriteEvent 是否开启写事件
          * @param ec 返回错误码
          * @return 返回执行结果
          */
-        bool _CreateSocket(SOCKET hSocket, bool bStream, bool bAcceptor, const NetAddr* pAddr,
-                bool bWriteEvent, ErrorCode& ec);
-
-        /**
-         * @brief 设置事件处理函数
-         * @param funReadEventHandler 读事件处理函数
-         * @param funWriteEventHandler 写事件处理函数
-         */
-        void _SetHandler(ReadEventHandler_t funReadEventHandler, WriteEventHandler_t funWriteEventHandler);
-
-        /**
-         * @brief 重置事件选项
-         * @param bReadEvent 是否接收读事件
-         * @param bWriteEvent 是否接收写事件
-         */
-        void _ResetEventFlags(bool bReadEvent, bool bWriteEvent);
-
-        /**
-         * @brief 连接事件处理函数
-         */
-        virtual void _OnConnect();
+        bool _CreateSocket(SOCKET hSocket, bool bStream, bool bAcceptor, const NetAddr* pAddr, ErrorCode& ec);
 
     protected:
         Socket m_hSocket;	///< 系统套接字
-        NetService& m_nsNetService;	///< 网络传输服务
-        bool m_bConnecting;	///< 是否正在连接
-        ReadEventHandler_t m_funReadEventHandler;	///< 读事件处理函数
-        WriteEventHandler_t m_funWriteEventHandler;	///< 写事件处理函数
+        NetService* m_pNetService;	///< 网络传输服务
     };
 
     /**
@@ -306,12 +294,8 @@ namespace ASL_NAMESPACE {
      */
     class UDPSocket : public NetSocket {
     public:
-        UDPSocket(NetService& nsNetService, ErrorCode& ec,
-                  ReadEventHandler_t funReadEventHandler,
-                  WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
-        UDPSocket(NetService& nsNetService, const NetAddr& naAddr, ErrorCode& ec,
-                  ReadEventHandler_t funReadEventHandler,
-                  WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
+        UDPSocket(ErrorCode& ec);
+        UDPSocket(const NetAddr& naAddr, ErrorCode& ec);
         virtual ~UDPSocket();
 
     public:
@@ -368,18 +352,35 @@ namespace ASL_NAMESPACE {
      */
     class TCPSocket : public NetSocket {
     public:
-        TCPSocket(NetService& nsNetService, ErrorCode& ec,
-                  ReadEventHandler_t funReadEventHandler,
-                  WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
-        TCPSocket(NetService& nsNetService, SOCKET hSocket, ErrorCode& ec,
-                  ReadEventHandler_t funReadEventHandler,
-                  WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
-        TCPSocket(NetService& nsNetService, const NetAddr& naAddr, ErrorCode& ec,
-                  ReadEventHandler_t funReadEventHandler,
-                  WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
+        TCPSocket(ErrorCode& ec);
+        TCPSocket(SOCKET hSocket, ErrorCode& ec);
+        TCPSocket(const NetAddr& naAddr, ErrorCode& ec);
         ~TCPSocket();
 
     public:
+        /**
+         * @brief 绑定事件回调
+         * @param nsNetService 传输服务
+         * @param funReadEventHandler 读事件处理函数
+         * @param funWriteEventHandler 写事件处理函数
+         * @return 返回执行结果
+         */
+        virtual bool BindEventHandler(NetService& nsNetService, ReadWriteHandler_t funReadEventHandler,
+                ReadWriteHandler_t funWriteEventHandler = ReadWriteHandler_t());
+
+        /**
+         * @brief 解绑事件回调
+         */
+        virtual void UnbindEventHandler();
+
+        /**
+         * @brief 修改事件回调
+         * @param funReadEventHandler 读事件处理函数
+         * @param funWriteEventHandler 写事件处理函数
+         */
+        virtual void ModifyEventHandler(ReadWriteHandler_t funReadEventHandler,
+                ReadWriteHandler_t funWriteEventHandler = ReadWriteHandler_t());
+
         /**
          * @brief 建立连接
          * @param naAddr 对端地址
@@ -444,7 +445,9 @@ namespace ASL_NAMESPACE {
         virtual void _OnConnect();
 
     private:
-        ConnectEventHandler_t m_funConnectEventHandler; ///< 连接时间处理句柄
+        ReadWriteHandler_t m_funReadEventHandler;   ///< 读事件处理句柄
+        ReadWriteHandler_t m_funWriteEventHandler;  ///< 写事件处理句柄
+        ConnectEventHandler_t m_funConnectEventHandler; ///< 连接事件处理句柄
     };
 
     /**
@@ -453,36 +456,25 @@ namespace ASL_NAMESPACE {
      */
     class TCPAcceptor : public NetSocket {
     public:
-        TCPAcceptor(NetService& nsNetService, const NetAddr& naAddr, ErrorCode& ec,
-                    ReadEventHandler_t funReadEventHandler);
+        TCPAcceptor(const NetAddr& naAddr, ErrorCode& ec);
         ~TCPAcceptor();
 
     public:
         /**
          * @brief 接收连接
-         * @param nsNetService 新连接网络传输服务
-         * @param funReadEventHandler 新连接读事件处理函数
-         * @param funWriteEventHandler 新连接写事件处理函数
          * @return 成功返回新建TCP套接字句柄，失败返回NULL
          */
-        TCPSocket* Accept(NetService& nsNetService,
-                ReadEventHandler_t funReadEventHandler,
-                WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t()) {
+        TCPSocket* Accept() {
             ErrorCode ec;
-            return Accept(nsNetService, ec, funReadEventHandler, funWriteEventHandler);
+            return Accept(ec);
         }
 
         /**
          * @brief 接收连接
-         * @param nsNetService 新连接网络传输服务
          * @param ec 错误代码
-         * @param funReadEventHandler 新连接读事件处理函数
-         * @param funWriteEventHandler 新连接写事件处理函数
          * @return 成功返回新建TCP套接字句柄，失败返回NULL
          */
-        TCPSocket* Accept(NetService& nsNetService, ErrorCode& ec,
-                ReadEventHandler_t funReadEventHandler,
-                WriteEventHandler_t funWriteEventHandler = WriteEventHandler_t());
+        TCPSocket* Accept(ErrorCode& ec);
 
         /**
          * @brief 跳过连接，此时低层会接收并关闭连接

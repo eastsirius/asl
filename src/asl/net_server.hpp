@@ -134,7 +134,7 @@ namespace ASL_NAMESPACE {
     protected:
         NetService& m_nsNetService;     ///< 网络传输服务
 
-        Mutex m_mtxListenersLock;   ///< 监听器哦列表锁
+        Mutex m_mtxListenersLock;   ///< 监听器列表锁
         std::vector<std::shared_ptr<TCPAcceptor> > m_lstListeners;  ///< 监听器列表
         Mutex m_mtxConnectionsLock; ///< 连接列表锁
         std::map<TCPSocket*, TCPConnSessionPtr_t> m_mpConnections;  ///< 连接列表

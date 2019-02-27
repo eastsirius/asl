@@ -410,14 +410,41 @@ namespace ASL_NAMESPACE {
     }
 
 
-    NetSocket::NetSocket(NetService& nsNetService) : m_nsNetService(nsNetService), m_bConnecting(false) {
+    NetSocket::NetSocket() : m_pNetService(NULL) {
     }
 
     NetSocket::~NetSocket() {
+        Close();
     }
 
     const Socket& NetSocket::GetSocket() const {
         return m_hSocket;
+    }
+
+    bool NetSocket::BindEventHandler(NetService& nsNetService, ReadWriteHandler_t funReadEventHandler,
+            ReadWriteHandler_t funWriteEventHandler) {
+        UnbindEventHandler();
+
+        if(!m_hSocket.IsEmpty()) {
+            m_pNetService = &nsNetService;
+            return m_pNetService->Add(m_hSocket, funReadEventHandler, funWriteEventHandler);
+        } else {
+            return false;
+        }
+    }
+
+    void NetSocket::UnbindEventHandler() {
+        if(m_pNetService && !m_hSocket.IsEmpty()) {
+            m_pNetService->Delete(m_hSocket);
+        }
+        m_pNetService = NULL;
+    }
+
+    void NetSocket::ModifyEventHandler(ReadWriteHandler_t funReadEventHandler,
+            ReadWriteHandler_t funWriteEventHandler) {
+        if(m_pNetService && !m_hSocket.IsEmpty()) {
+            m_pNetService->Modify(m_hSocket, funReadEventHandler, funWriteEventHandler);
+        }
     }
 
     bool NetSocket::SetSendBufSize(int nSize) {
@@ -443,28 +470,11 @@ namespace ASL_NAMESPACE {
     }
 
     void NetSocket::Close() {
-        if(!m_hSocket.IsEmpty()) {
-            m_nsNetService.Delete(m_hSocket);
-        }
+        UnbindEventHandler();
         m_hSocket.Release();
     }
 
-    void NetSocket::_OnRead() {
-        if(m_funReadEventHandler) {
-            m_funReadEventHandler(this);
-        }
-    }
-
-    void NetSocket::_OnWrite() {
-        if(m_bConnecting) {
-            _OnConnect();
-        } else if(m_funWriteEventHandler) {
-            m_funWriteEventHandler(this);
-        }
-    }
-
-    bool NetSocket::_CreateSocket(SOCKET hSocket, bool bStream, bool bAcceptor,
-            const NetAddr* pAddr, bool bWriteEvent, ErrorCode& ec) {
+    bool NetSocket::_CreateSocket(SOCKET hSocket, bool bStream, bool bAcceptor, const NetAddr* pAddr, ErrorCode& ec) {
         if(hSocket == INVALID_SOCKET) {
             hSocket = socket(AF_INET, bStream ? SOCK_STREAM : SOCK_DGRAM, 0);
         }
@@ -504,67 +514,16 @@ namespace ASL_NAMESPACE {
             return false;
         }
 
-        NetService::Handler_t readHeader = [this](){
-            this->_OnRead();
-        };
-        NetService::Handler_t writeHandler = [this](){
-            this->_OnWrite();
-        };
-        if(!bWriteEvent) {
-			writeHandler = NetService::Handler_t();
-        }
-        if(!m_nsNetService.Add(m_hSocket, readHeader, writeHandler)) {
-            ec = AslError(AECV_BindSocketError);
-            m_hSocket.Release();
-            return false;
-        }
-
         return true;
     }
 
-    void NetSocket::_SetHandler(ReadEventHandler_t funReadEventHandler, WriteEventHandler_t funWriteEventHandler) {
-        if(funReadEventHandler) {
-            m_funReadEventHandler = funReadEventHandler;
-        }
-        if(funWriteEventHandler) {
-            m_funWriteEventHandler = funWriteEventHandler;
-        }
+
+    UDPSocket::UDPSocket(ErrorCode& ec) : NetSocket() {
+        _CreateSocket(INVALID_SOCKET, false, false, NULL, ec);
     }
 
-    void NetSocket::_ResetEventFlags(bool bReadEvent, bool bWriteEvent) {
-        NetService::Handler_t readHeader = [this](){
-            this->_OnRead();
-        };
-        NetService::Handler_t writeHandler = [this](){
-            this->_OnWrite();
-        };
-        if(!bReadEvent) {
-            readHeader = NetService::Handler_t();
-        }
-        if(!bWriteEvent) {
-            writeHandler = NetService::Handler_t();
-        }
-        m_nsNetService.Modify(m_hSocket, readHeader, writeHandler);
-    }
-
-    void NetSocket::_OnConnect() {
-    }
-
-
-    UDPSocket::UDPSocket(NetService& nsNetService, ErrorCode& ec,
-            ReadEventHandler_t funReadEventHandler,
-            WriteEventHandler_t funWriteEventHandler)
-            : NetSocket(nsNetService) {
-        _SetHandler(funReadEventHandler, funWriteEventHandler);
-        _CreateSocket(INVALID_SOCKET, false, false, NULL, true, ec);
-    }
-
-    UDPSocket::UDPSocket(NetService& nsNetService, const NetAddr& naAddr, ErrorCode& ec,
-            ReadEventHandler_t funReadEventHandler,
-            WriteEventHandler_t funWriteEventHandler)
-            : NetSocket(nsNetService) {
-        _SetHandler(funReadEventHandler, funWriteEventHandler);
-        _CreateSocket(INVALID_SOCKET, false, false, &naAddr, true, ec);
+    UDPSocket::UDPSocket(const NetAddr& naAddr, ErrorCode& ec) : NetSocket() {
+        _CreateSocket(INVALID_SOCKET, false, false, &naAddr, ec);
     }
 
     UDPSocket::~UDPSocket() {
@@ -597,32 +556,62 @@ namespace ASL_NAMESPACE {
     }
 
 
-    TCPSocket::TCPSocket(NetService& nsNetService, ErrorCode& ec,
-            ReadEventHandler_t funReadEventHandler,
-            WriteEventHandler_t funWriteEventHandler)
-            : NetSocket(nsNetService) {
-        _SetHandler(funReadEventHandler, funWriteEventHandler);
-        _CreateSocket(INVALID_SOCKET, true, false, NULL, true, ec);
+    TCPSocket::TCPSocket(ErrorCode& ec) : NetSocket() {
+        _CreateSocket(INVALID_SOCKET, true, false, NULL, ec);
     }
 
-    TCPSocket::TCPSocket(NetService& nsNetService, SOCKET hSocket, ErrorCode& ec,
-            ReadEventHandler_t funReadEventHandler,
-            WriteEventHandler_t funWriteEventHandler)
-            : NetSocket(nsNetService) {
-        _SetHandler(funReadEventHandler, funWriteEventHandler);
-        _CreateSocket(hSocket, true, false, NULL, true, ec);
+    TCPSocket::TCPSocket(SOCKET hSocket, ErrorCode& ec) : NetSocket() {
+        _CreateSocket(hSocket, true, false, NULL, ec);
     }
 
-    TCPSocket::TCPSocket(NetService& nsNetService, const NetAddr& naAddr, ErrorCode& ec,
-            ReadEventHandler_t funReadEventHandler,
-            WriteEventHandler_t funWriteEventHandler)
-            : NetSocket(nsNetService) {
-        _SetHandler(funReadEventHandler, funWriteEventHandler);
-        _CreateSocket(INVALID_SOCKET, true, false, &naAddr, true, ec);
+    TCPSocket::TCPSocket(const NetAddr& naAddr, ErrorCode& ec) : NetSocket() {
+        _CreateSocket(INVALID_SOCKET, true, false, &naAddr, ec);
     }
 
     TCPSocket::~TCPSocket() {
         Close();
+    }
+
+    bool TCPSocket::BindEventHandler(NetService& nsNetService, ReadWriteHandler_t funReadEventHandler,
+            ReadWriteHandler_t funWriteEventHandler) {
+        UnbindEventHandler();
+
+        if(m_funConnectEventHandler) {
+            if(!NetSocket::BindEventHandler(nsNetService, NULL, [this](){
+                _OnConnect();
+            })) {
+                return false;
+            }
+        } else {
+            if(!NetSocket::BindEventHandler(nsNetService, funReadEventHandler, funWriteEventHandler)) {
+                return false;
+            }
+        }
+
+        m_funReadEventHandler = funReadEventHandler;
+        m_funWriteEventHandler = funWriteEventHandler;
+
+        return true;
+    }
+
+    void TCPSocket::UnbindEventHandler() {
+        m_funReadEventHandler = ReadWriteHandler_t();
+        m_funWriteEventHandler = ReadWriteHandler_t();
+        NetSocket::UnbindEventHandler();
+    }
+
+    void TCPSocket::ModifyEventHandler(ReadWriteHandler_t funReadEventHandler,
+            ReadWriteHandler_t funWriteEventHandler) {
+        if(m_funConnectEventHandler) {
+            NetSocket::ModifyEventHandler(NULL, [this](){
+                _OnConnect();
+            });
+        } else {
+            NetSocket::ModifyEventHandler(funReadEventHandler, funWriteEventHandler);
+        }
+
+        m_funReadEventHandler = funReadEventHandler;
+        m_funWriteEventHandler = funWriteEventHandler;
     }
 
     int TCPSocket::Connect(const NetAddr& naAddr, int nTimeout) {
@@ -633,14 +622,10 @@ namespace ASL_NAMESPACE {
     void TCPSocket::AsyncConnect(const NetAddr& naAddr, ConnectEventHandler_t funConnectEventHandler) {
         m_funConnectEventHandler = funConnectEventHandler;
         m_hSocket.Connect(naAddr.GetAddr(), naAddr.GetAddrLen());
-        m_bConnecting = true;
-        _ResetEventFlags(false, true);
+        ModifyEventHandler(m_funReadEventHandler, m_funWriteEventHandler);
     }
 
     void TCPSocket::_OnConnect() {
-        m_bConnecting = false;
-        _ResetEventFlags(true, false);
-
         ErrorCode ec;
         int error;
         socklen_t len = sizeof(error);
@@ -652,7 +637,12 @@ namespace ASL_NAMESPACE {
         } else if(error != 0) {
             ec = AslError(AECV_ConnectFailed);
         }
-        m_funConnectEventHandler(this, ec);
+
+        if(m_funConnectEventHandler) {
+            m_funConnectEventHandler(ec);
+            m_funConnectEventHandler = ConnectEventHandler_t();
+        }
+        ModifyEventHandler(m_funReadEventHandler, m_funWriteEventHandler);
     }
 
     int TCPSocket::Send(const uint8_t* pBuf, int nSize, ErrorCode& ec, int nTimeout) {
@@ -680,20 +670,15 @@ namespace ASL_NAMESPACE {
     }
 
 
-    TCPAcceptor::TCPAcceptor(NetService& nsNetService, const NetAddr& naAddr, ErrorCode& ec,
-            ReadEventHandler_t funReadEventHandler)
-            : NetSocket(nsNetService) {
-        _SetHandler(funReadEventHandler, ReadEventHandler_t());
-        _CreateSocket(INVALID_SOCKET, true, true, &naAddr, false, ec);
+    TCPAcceptor::TCPAcceptor(const NetAddr& naAddr, ErrorCode& ec) : NetSocket() {
+        _CreateSocket(INVALID_SOCKET, true, true, &naAddr, ec);
     }
 
     TCPAcceptor::~TCPAcceptor() {
         Close();
     }
 
-    TCPSocket* TCPAcceptor::Accept(NetService& nsNetService, ErrorCode& ec,
-            ReadEventHandler_t funReadEventHandler,
-            WriteEventHandler_t funWriteEventHandler) {
+    TCPSocket* TCPAcceptor::Accept(ErrorCode& ec) {
         assert(funReadEventHandler != NULL);
 
         SOCKET hSocket = _DoAccept(ec);
@@ -701,7 +686,7 @@ namespace ASL_NAMESPACE {
             return NULL;
         }
 
-        TCPSocket* pSocket = new TCPSocket(nsNetService, hSocket, ec, funReadEventHandler, funWriteEventHandler);
+        TCPSocket* pSocket = new TCPSocket(hSocket, ec);
         if(ec) {
             delete pSocket;
             return NULL;

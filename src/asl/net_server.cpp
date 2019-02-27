@@ -71,12 +71,15 @@ namespace ASL_NAMESPACE {
             }
 
             ErrorCode ec;
-            auto handler = [this](NetSocket* pSocket) {
-                this->_OnListenerRead((TCPAcceptor*)pSocket);
-            };
-            std::shared_ptr<TCPAcceptor> pSocket = std::make_shared<TCPAcceptor>(m_nsNetService,
-                    NetAddr(strIP.c_str(), nPort), ec, handler);
+            std::shared_ptr<TCPAcceptor> pSocket = std::make_shared<TCPAcceptor>(NetAddr(strIP.c_str(), nPort), ec);
             if(ec) {
+                return false;
+            }
+            auto handler = [this, pSocket]() {
+                this->_OnListenerRead(pSocket.get());
+            };
+            if(!pSocket->BindEventHandler(m_nsNetService, handler)) {
+                pSocket->Close();
                 return false;
             }
             m_lstListeners.push_back(pSocket);
@@ -109,12 +112,18 @@ namespace ASL_NAMESPACE {
             return;
         }
 
-        auto readHandler = [this, pSession](NetSocket* pSocket){
-            this->_OnRead((TCPSocket*)pSocket, pSession.get());
-        };
-        auto pSocket = pAcceptor->Accept(m_nsNetService, readHandler);
+        auto pSocket = pAcceptor->Accept();
         if(!pSocket) {
             //接收失败，可能是惊群现象引起
+            return;
+        }
+
+        auto readHandler = [this, pSocket, pSession](){
+            this->_OnRead(pSocket, pSession.get());
+        };
+        if(!pSocket->BindEventHandler(m_nsNetService, readHandler)) {
+            pSocket->Close();
+            delete pSocket;
             return;
         }
 

@@ -9,6 +9,7 @@
 #include "time.hpp"
 #include "url.hpp"
 #include <cstring>
+#include <regex>
 
 namespace ASL_NAMESPACE {
     /**
@@ -403,8 +404,84 @@ namespace ASL_NAMESPACE {
     }
 
 
-    HttpServer:: HttpServer(NetService& nsNetService, HttpRequestHandler_t funRequestProc)
-        : BaseTCPServer(nsNetService), m_funRequestProc(funRequestProc) {
+    FunctionHttpHandler::FunctionHttpHandler(HttpRequestHandler_t funRequestHandler)
+            : m_funRequestHandler(funRequestHandler) {
+	}
+
+    FunctionHttpHandler::~FunctionHttpHandler() {
+	}
+
+	void FunctionHttpHandler::HttpProc(const HttpRequest& hrReq, WriteRespHandler_t funWriteResp) {
+        m_funRequestHandler(hrReq, funWriteResp);
+	}
+
+
+	HttpMux::HttpMux() {
+        ClearHandler();
+	}
+
+	HttpMux::~HttpMux() {
+	}
+
+	void HttpMux::HttpProc(const HttpRequest& hrReq, WriteRespHandler_t funWriteResp) {
+	    for(auto iter = m_lstHandlerSessions.begin(); iter != m_lstHandlerSessions.end(); ++iter) {
+	        if(_MatchUrl(iter->mtType, iter->strKey, hrReq.GetUrl())) {
+	            if(iter->pHandler) {
+	                iter->pHandler->HttpProc(hrReq, funWriteResp);
+	            }
+	            return;
+	        }
+	    }
+
+	    if(m_p404Handler) {
+	        m_p404Handler->HttpProc(hrReq, funWriteResp);
+	    }
+	}
+
+	void HttpMux::AddHandler(MatchType mtType, std::string strKey, HttpHandlerPtr_t pHandler) {
+        HandlerSession session;
+        session.mtType = mtType;
+        session.strKey = strKey;
+        session.pHandler = pHandler;
+        m_lstHandlerSessions.push_back(session);
+	}
+
+	void HttpMux::ClearHandler() {
+	    m_p404Handler = std::make_shared<FunctionHttpHandler>(_Default404Proc);
+        m_lstHandlerSessions.clear();
+	}
+
+    bool HttpMux::_MatchUrl(MatchType mtType, const std::string& strKey, const std::string& strUrl) {
+	    switch(mtType) {
+	        case MT_FullString:
+	            return strKey == strUrl;
+	            break;
+	        case MT_MatchBegin:
+	            return strncmp(strKey.c_str(), strUrl.c_str(), strKey.length()) == 0;
+	            break;
+	        case MT_Regex: {
+	            std::regex re(strKey);
+	            std::cmatch m;
+	            return std::regex_match(strUrl.c_str(), m, re);
+                break;
+	        }
+	        default:
+	            break;
+	    }
+
+	    return true;
+	}
+
+    void HttpMux::_Default404Proc(const HttpRequest& hrReq, WriteRespHandler_t funWriteResp) {
+        HttpResponse resp;
+        resp.SetState(404);
+        resp.SetTimeField();
+        funWriteResp(resp);
+	}
+
+
+    HttpServer:: HttpServer(NetService& nsNetService, HttpHandlerPtr_t pHandler)
+        : BaseTCPServer(nsNetService), m_pHandler(pHandler) {
     }
 
     HttpServer::~HttpServer() {
@@ -421,7 +498,7 @@ namespace ASL_NAMESPACE {
             auto handler = [this, pSocket](const HttpResponse& hrResp) {
                 this->_SendResponse(hrResp, pSocket);
             };
-            m_funRequestProc(req, handler);
+            m_pHandler->HttpProc(req, handler);
         }
 
         return nRet;

@@ -310,7 +310,184 @@ namespace ASL_NAMESPACE {
 	};
 
     /**
-     * @class HttpServer
+     * @brief HTTP请求句柄
+     */
+    class HttpHandler : public NoCopyable {
+    public:
+        virtual ~HttpHandler(){}
+
+        typedef std::function<void(const HttpResponse& hrResp)> WriteRespHandler_t;
+        typedef std::function<void(const HttpRequest& hrReq, WriteRespHandler_t funWriteResp)> HttpRequestHandler_t;
+
+        /**
+         * @brief HTTP请求处理函数
+         * @param hrReq HTTP请求
+         * @param funWriteResp HTTP响应发送函数
+         */
+        virtual void HttpProc(const HttpRequest& hrReq, WriteRespHandler_t funWriteResp) = 0;
+    };
+    typedef std::shared_ptr<HttpHandler> HttpHandlerPtr_t;
+
+    /**
+     * @brief 函数试HTTP请求句柄
+     */
+    class FunctionHttpHandler : public HttpHandler {
+    public:
+        FunctionHttpHandler(HttpRequestHandler_t funRequestHandler);
+        virtual ~FunctionHttpHandler();
+
+    public:
+        /**
+         * @brief HTTP请求处理函数
+         * @param hrReq HTTP请求
+         * @param funWriteResp HTTP响应发送函数
+         */
+        virtual void HttpProc(const HttpRequest& hrReq, WriteRespHandler_t funWriteResp);
+
+    private:
+        HttpRequestHandler_t m_funRequestHandler;
+    };
+
+    /**
+     * @brief HTTP请求路由
+     */
+    class HttpMux : public HttpHandler {
+    public:
+        HttpMux();
+        virtual ~HttpMux();
+
+        /**
+         * @brief 匹配类型
+         */
+        enum MatchType {
+            MT_FullString,  ///< 全文匹配
+            MT_MatchBegin,  ///< 匹配开头
+            MT_Regex,       ///< 正则表达式
+        };
+
+        /**
+         * @brief 句柄上下文
+         */
+        struct HandlerSession {
+            MatchType mtType;       ///< 匹配类型
+            std::string strKey;     ///< 匹配键值
+            HttpHandlerPtr_t pHandler;    ///< 句柄
+        };
+
+    public:
+        /**
+         * @brief HTTP请求处理函数
+         * @param hrReq HTTP请求
+         * @param funWriteResp HTTP响应发送函数
+         */
+        virtual void HttpProc(const HttpRequest& hrReq, WriteRespHandler_t funWriteResp);
+
+        /**
+         * @brief 添加句柄
+         * @param mtType 匹配类型
+         * @param strKey 匹配键值
+         * @param pHandler 句柄
+         */
+        void AddHandler(MatchType mtType, std::string strKey, HttpHandlerPtr_t pHandler);
+
+        /**
+         * @brief 清空句柄
+         */
+        void ClearHandler();
+
+        /**
+         * @brief 添加全文匹配句柄
+         * @param strUrl URL
+         * @param pHandler 句柄
+         */
+        void AddFullStringHandler(std::string strUrl, HttpHandlerPtr_t pHandler) {
+            AddHandler(MT_FullString, strUrl, pHandler);
+        }
+
+        /**
+         * @brief 添加全文匹配句柄
+         * @param strUrl URL
+         * @param funRequestHandler 句柄
+         */
+        void AddFullStringHandle(std::string strUrl, HttpRequestHandler_t funRequestHandler) {
+            AddFullStringHandler(strUrl, std::make_shared<FunctionHttpHandler>(funRequestHandler));
+        }
+
+        /**
+         * @brief 添加匹配前部句柄
+         * @param strPattern 匹配字符串
+         * @param pHandler 句柄
+         */
+        void AddMatchBeginHandler(std::string strPattern, HttpHandlerPtr_t pHandler) {
+            AddHandler(MT_MatchBegin, strPattern, pHandler);
+        }
+
+        /**
+         * @brief 添加匹配前部句柄
+         * @param strPattern 匹配字符串
+         * @param funRequestHandler 句柄
+         */
+        void AddMatchBeginHandle(std::string strPattern, HttpRequestHandler_t funRequestHandler) {
+            AddMatchBeginHandler(strPattern, std::make_shared<FunctionHttpHandler>(funRequestHandler));
+        }
+
+        /**
+         * @brief 添加正则匹配句柄
+         * @param strRegex 正则表达式
+         * @param pHandler 句柄
+         */
+        void AddRegexHandler(std::string strRegex, HttpHandlerPtr_t pHandler) {
+            AddHandler(MT_Regex, strRegex, pHandler);
+        }
+
+        /**
+         * @brief 添加正则匹配句柄
+         * @param strRegex 正则表达式
+         * @param funRequestHandler 句柄
+         */
+        void AddRegexHandle(std::string strRegex, HttpRequestHandler_t funRequestHandler) {
+            AddRegexHandler(strRegex, std::make_shared<FunctionHttpHandler>(funRequestHandler));
+        }
+
+        /**
+         * @brief 添加404句柄
+         * @param pHandler 句柄
+         */
+        void Set404Handler(HttpHandlerPtr_t pHandler) {
+            m_p404Handler = pHandler;
+        }
+
+        /**
+         * @brief 添加404句柄
+         * @param funRequestHandler 句柄
+         */
+        void Set404Handler(HttpRequestHandler_t funRequestHandler) {
+            Set404Handler(std::make_shared<FunctionHttpHandler>(funRequestHandler));
+        }
+
+    private:
+        /**
+         * @brief 匹配URL
+         * @param mtType 匹配类型
+         * @param strKey 匹配键值
+         * @param strUrl URL
+         * @return 返回匹配结果
+         */
+        bool _MatchUrl(MatchType mtType, const std::string& strKey, const std::string& strUrl);
+
+        /**
+         * @brief 默认404处理函数
+         * @param hrReq HTTP请求
+         * @param funWriteResp HTTP响应发送函数
+         */
+        static void _Default404Proc(const HttpRequest& hrReq, WriteRespHandler_t funWriteResp);
+
+    private:
+        HttpHandlerPtr_t m_p404Handler;   ///< 404处理句柄
+        std::vector<HandlerSession> m_lstHandlerSessions;   ///< 句柄上下文列表
+    };
+
+    /**
      * @brief Http服务类
      */
     class HttpServer : public BaseTCPServer {
@@ -322,10 +499,7 @@ namespace ASL_NAMESPACE {
         public:
         };
 
-        typedef std::function<void(const HttpResponse& hrResp)> WriteRespHandler_t;
-        typedef std::function<void(const HttpRequest& hrReq, WriteRespHandler_t funWriteResp)> HttpRequestHandler_t;
-
-        HttpServer(NetService& nsNetService, HttpRequestHandler_t funRequestProc);
+        HttpServer(NetService& nsNetService, HttpHandlerPtr_t pHandler);
         virtual ~HttpServer();
 
     protected:
@@ -347,6 +521,6 @@ namespace ASL_NAMESPACE {
         bool _SendResponse(const HttpResponse& hrResp, TCPSocket* pSocket);
 
     protected:
-        HttpRequestHandler_t m_funRequestProc;
+        HttpHandlerPtr_t m_pHandler;
     };
 }
