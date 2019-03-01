@@ -679,8 +679,6 @@ namespace ASL_NAMESPACE {
     }
 
     TCPSocket* TCPAcceptor::Accept(ErrorCode& ec) {
-        assert(funReadEventHandler != NULL);
-
         SOCKET hSocket = _DoAccept(ec);
         if(hSocket == INVALID_SOCKET) {
             return NULL;
