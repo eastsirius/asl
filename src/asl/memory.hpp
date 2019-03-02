@@ -227,7 +227,7 @@ namespace ASL_NAMESPACE {
 
 	private:
 	    MutexT m_mtxLock;
-	    std::map<KeyT, ValueT> m_mpValueMap;
+	    std::map<KeyT, ValueSession> m_mpValueMap;
 	};
 
 	/**
