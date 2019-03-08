@@ -85,6 +85,11 @@
 #  define ASL_NAMESPACE asl
 #endif
 
+#define ASL_SHAREDPTR_DEF2(obj,ptr) typedef std::shared_ptr<obj> ptr
+#define ASL_SHAREDPTR_DEF(obj) ASL_SHAREDPTR_DEF2(obj, obj##Ptr_t)
+#define ASL_SHAREDPTR_PRE_DEF2(obj,ptr) ASL_SHAREDPTR_DEF2(class obj, ptr)
+#define ASL_SHAREDPTR_PRE_DEF(obj) ASL_SHAREDPTR_DEF2(class obj, obj##Ptr_t)
+
 //----------------------------------------------------------------------
 #ifndef WINDOWS
 #  define ASL_CLASS_EXPORT

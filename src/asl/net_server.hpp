@@ -139,4 +139,83 @@ namespace ASL_NAMESPACE {
         Mutex m_mtxConnectionsLock; ///< 连接列表锁
         std::map<TCPSocket*, TCPConnSessionPtr_t> m_mpConnections;  ///< 连接列表
     };
+
+    ASL_SHAREDPTR_PRE_DEF(TcpRpcClient);
+
+    /**
+     * @brief TCP RPC客户端
+     */
+    class TcpRpcClient : public NoCopyable {
+    public:
+        TcpRpcClient();
+        ~TcpRpcClient();
+
+        typedef std::function<bool(const uint8_t* pData, int nSize, ErrorCode ec)> ResponseHandler_t;
+
+    public:
+        /**
+         * @brief 关闭客户端
+         */
+        void Close();
+
+        /**
+         * @brief 异步调用
+         * @param nsNetService 绑定传输服务
+         * @param szAddr 服务地址
+         * @param pData 请求数据
+         * @param nSize 请求数据长度
+         * @param nTimeout 毫秒超时时间
+         * @param funHandler 结果回调
+         * @return 成功返回客户端实例，失败返回空指针
+         */
+        static TcpRpcClientPtr_t AsyncCall(NetService& nsNetService, const NetAddr& naAddr,
+                const uint8_t* pData, int nSize, int nTimeout, ResponseHandler_t funHandler);
+
+    private:
+        /**
+         * @brief 异步调用
+         * @param nsNetService 绑定传输服务
+         * @param szAddr 服务地址
+         * @param pData 请求数据
+         * @param nSize 请求数据长度
+         * @param nTimeout 毫秒超时时间
+         * @param funHandler 结果回调
+         * @return 返回执行结果
+         */
+        bool _AsyncCall(NetService& nsNetService, const NetAddr& naAddr, const uint8_t* pData,
+                int nSize, int nTimeout, ResponseHandler_t funHandler);
+
+        /**
+         * @brief 连接事件处理函数
+         * @param ec 错误码
+         */
+        void _OnConnect(ErrorCode ec);
+
+        /**
+         * @brief 读取事件处理函数
+         */
+        void _OnRead();
+
+        /**
+         * @brief 写入事件处理函数
+         */
+        void _OnWrite();
+
+        /**
+         * @brief 错误处理
+         * @param ec 错误码
+         */
+        void _DoError(ErrorCode ec);
+
+        /**
+         * @brief 发送操作
+         */
+        void _DoSend();
+
+    private:
+        Buffer m_bfSendBuf;             ///< 发送缓存
+        GrowthBuffer m_bfRecvBuf;       ///< 接收缓存
+        ResponseHandler_t m_funHandler; ///< 响应处理函数
+        TCPSocketPtr_t m_pSocket;       ///< 套接字
+    };
 }

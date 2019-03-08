@@ -14,6 +14,7 @@
 #include <functional>
 #include <map>
 #include <list>
+#include <atomic>
 
 struct addrinfo;
 
@@ -29,6 +30,18 @@ namespace ASL_NAMESPACE {
         typedef std::function<void()> Handler_t; ///< 事件句柄
         typedef std::map<SOCKET, Handler_t> HandlerMap_t; ///< 事件句柄影射表
         typedef std::function<void(const addrinfo* pRet)> GetAddrInfoHandler_t; ///< 域名解析结果句柄
+
+        /**
+         * @brief 计时器上下文
+         */
+        struct TimerSession {
+            uint64_t u64Id;
+            int64_t nTimeoutTime;
+            SOCKET hSocket;
+            Handler_t funHandler;
+        };
+
+        typedef std::list<TimerSession> TimerSessionList_t; ///< 计时器上下文列表
 
         /**
          * @brief 域名解析上下文
@@ -88,6 +101,35 @@ namespace ASL_NAMESPACE {
         void Delete(SOCKET nSocket);
 
         /**
+		 * @brief 添加计时器
+		 * @param nTimout 毫秒超时时间
+         * @param funHandler 事件句柄
+		 * @return 返回计时器句柄
+		 */
+        uint64_t AddTimer(int nTimout, Handler_t funHandler);
+
+        /**
+		 * @brief 添加计时器
+		 * @param nSocket 绑定到套接字
+         * @param nTimout 毫秒超时时间
+         * @param funHandler 事件句柄
+		 * @return 返回计时器句柄
+		 */
+        uint64_t AddTimer(SOCKET nSocket, int nTimout, Handler_t funHandler);
+
+        /**
+		 * @brief 删除计时器
+		 * @param u64Id 计时器句柄
+		 */
+        void DeleteTimer(uint64_t u64Id);
+
+        /**
+		 * @brief 删除套接字下计时器
+		 * @param nSocket 套接字
+		 */
+        void DeleteSocketTimer(SOCKET nSocket);
+
+        /**
 		 * @brief 运行单次循环
 		 * @param nTimeout 毫秒超时
 		 */
@@ -112,6 +154,11 @@ namespace ASL_NAMESPACE {
         void _DoEvent(SOCKET nSocket, bool bReadOrWrite);
 
         /**
+		 * @brief 计时器检测
+		 */
+        void _TestTimer();
+
+        /**
 		 * @brief 域名解析结果测试
 		 */
         void _TestGetAddrInfoResult();
@@ -121,8 +168,11 @@ namespace ASL_NAMESPACE {
         std::map<SOCKET, bool> m_mpSocketMap; ///< 套接字列表
         HandlerMap_t m_mpReadHandlerMap;      ///< 读事件句柄影射表
         HandlerMap_t m_mpWriteHandlerMap;     ///< 写事件句柄影射表
+        std::atomic_uint_fast64_t m_nTimerIdCnt;  ///< 计时器ID计数器
+        TimerSessionList_t m_lstTimerSessionList; ///< 计时器上下文列表
         GetAddrInfoSessionList_t m_lstGetAddrInfoSessionList; ///< 域名解析上下文列表
     };
+    ASL_SHAREDPTR_DEF(NetService);
 
     /**
      * @brief 网络地址
@@ -287,6 +337,7 @@ namespace ASL_NAMESPACE {
         Socket m_hSocket;	///< 系统套接字
         NetService* m_pNetService;	///< 网络传输服务
     };
+    ASL_SHAREDPTR_DEF(NetSocket);
 
     /**
      * @class UDPSocket
@@ -345,6 +396,7 @@ namespace ASL_NAMESPACE {
          */
         int RecvFrom(uint8_t* pBuf, int nSize, NetAddr& naAddr, ErrorCode& ec);
     };
+    ASL_SHAREDPTR_DEF(UDPSocket);
 
     /**
      * @class TCPSocket
@@ -393,8 +445,9 @@ namespace ASL_NAMESPACE {
          * @brief 异步建立连接
          * @param naAddr 对端地址
          * @param funConnectEventHandler 时间回调函数
+         * @param nTimeout 毫秒超时时间
          */
-        void AsyncConnect(const NetAddr& naAddr, ConnectEventHandler_t funConnectEventHandler);
+        void AsyncConnect(const NetAddr& naAddr, ConnectEventHandler_t funConnectEventHandler, int nTimeout = 30000);
 
         /**
          * @brief 发送流数据
@@ -441,14 +494,17 @@ namespace ASL_NAMESPACE {
     protected:
         /**
          * @brief 连接事件处理函数
+         * @param bTimerout 是否超时
          */
-        virtual void _OnConnect();
+        virtual void _OnConnect(bool bTimeout);
 
     private:
+        uint64_t m_u64ConnTimer;    ///< 连接计时器句柄
         ReadWriteHandler_t m_funReadEventHandler;   ///< 读事件处理句柄
         ReadWriteHandler_t m_funWriteEventHandler;  ///< 写事件处理句柄
         ConnectEventHandler_t m_funConnectEventHandler; ///< 连接事件处理句柄
     };
+    ASL_SHAREDPTR_DEF(TCPSocket);
 
     /**
      * @class TCPAcceptor
@@ -489,4 +545,5 @@ namespace ASL_NAMESPACE {
          */
         SOCKET _DoAccept(ErrorCode& ec);
     };
+    ASL_SHAREDPTR_DEF(TCPAcceptor);
 }

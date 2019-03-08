@@ -100,22 +100,28 @@ namespace ASL_NAMESPACE {
 		switch(ec) {
 		case AECV_Error:
 			return "error";
-			break;
 		case AECV_AllocContextError:
 			return "error when alloc context";
-			break;
 		case AECV_OpTimeout:
 			return "operate timeout";
-			break;
 		case AECV_Reconnect:
 			return "reconnect";
-			break;
 		case AECV_ConnectFailed:
 			return "connect failed";
-			break;
 		case AECV_BindSocketError:
 			return "error when bind socket to netservice";
-			break;
+		case AECV_ParamError:
+			return "param error";
+		case AECV_AllocMemoryFailed:
+			return "alloc memory failed";
+		case AECV_SerialFailed:
+		    return "serial data failed";
+        case AECV_ParseFailed:
+            return "parse data failed";
+        case AECV_SendFailed:
+            return "send data failed";
+        case AECV_RecvFailed:
+            return "recv data failed";
 		default:
 			break;
 		}

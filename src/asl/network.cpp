@@ -51,7 +51,7 @@ namespace ASL_NAMESPACE {
     }
 
 
-    NetService::NetService() : m_nHandle(-1) {
+    NetService::NetService() : m_nHandle(-1), m_nTimerIdCnt(0) {
     }
 
     NetService::~NetService() {
@@ -163,6 +163,7 @@ namespace ASL_NAMESPACE {
         m_mpSocketMap.erase(nSocket);
         m_mpReadHandlerMap.erase(nSocket);
         m_mpWriteHandlerMap.erase(nSocket);
+        DeleteSocketTimer(nSocket);
 
 #if ASL_NETSERVICE_USE_EPOLL
         assert(m_nHandle != -1);
@@ -170,7 +171,42 @@ namespace ASL_NAMESPACE {
 #endif
     }
 
+    uint64_t NetService::AddTimer(int nTimout, Handler_t funHandler) {
+        AddTimer(INVALID_SOCKET, nTimout, funHandler);
+    }
+
+    uint64_t NetService::AddTimer(SOCKET nSocket, int nTimout, Handler_t funHandler) {
+        TimerSession session;
+        session.u64Id = ++m_nTimerIdCnt;
+        session.hSocket = nSocket;
+        session.nTimeoutTime = asl_get_ms_time() + nTimout;
+        session.funHandler = funHandler;
+        m_lstTimerSessionList.push_back(session);
+
+        return session.u64Id;
+    }
+
+    void NetService::DeleteTimer(uint64_t u64Id) {
+        for(auto iter = m_lstTimerSessionList.begin(); iter != m_lstTimerSessionList.end(); ++iter) {
+            if(iter->u64Id == u64Id) {
+                m_lstTimerSessionList.erase(iter);
+                return;
+            }
+        }
+    }
+
+    void NetService::DeleteSocketTimer(SOCKET nSocket) {
+        for(auto iter = m_lstTimerSessionList.begin(); iter != m_lstTimerSessionList.end();) {
+            if(iter->hSocket != INVALID_SOCKET && iter->hSocket == nSocket) {
+                iter = m_lstTimerSessionList.erase(iter);
+                continue;
+            }
+            ++iter;
+        }
+    }
+
     void NetService::RunOnce(int nTimeout) {
+        _TestTimer();
         _TestGetAddrInfoResult();
 
         if(m_mpSocketMap.empty()) {
@@ -259,6 +295,23 @@ namespace ASL_NAMESPACE {
         auto iter = hmap.find(nSocket);
         if(iter != hmap.end()) {
             iter->second();
+        }
+    }
+
+    void NetService::_TestTimer() {
+        std::vector<Handler_t> handlers;
+        int64_t cur_time = asl_get_ms_time();
+        for(auto iter = m_lstTimerSessionList.begin(); iter != m_lstTimerSessionList.end();) {
+            if(cur_time > iter->nTimeoutTime) {
+                handlers.push_back(iter->funHandler);
+                iter = m_lstTimerSessionList.erase(iter);
+                continue;
+            }
+            ++iter;
+        }
+
+        for(auto iter = handlers.begin(); iter != handlers.end(); ++iter) {
+            (*iter)();
         }
     }
 
@@ -556,15 +609,15 @@ namespace ASL_NAMESPACE {
     }
 
 
-    TCPSocket::TCPSocket(ErrorCode& ec) : NetSocket() {
+    TCPSocket::TCPSocket(ErrorCode& ec) : NetSocket(), m_u64ConnTimer(0) {
         _CreateSocket(INVALID_SOCKET, true, false, NULL, ec);
     }
 
-    TCPSocket::TCPSocket(SOCKET hSocket, ErrorCode& ec) : NetSocket() {
+    TCPSocket::TCPSocket(SOCKET hSocket, ErrorCode& ec) : NetSocket(), m_u64ConnTimer(0) {
         _CreateSocket(hSocket, true, false, NULL, ec);
     }
 
-    TCPSocket::TCPSocket(const NetAddr& naAddr, ErrorCode& ec) : NetSocket() {
+    TCPSocket::TCPSocket(const NetAddr& naAddr, ErrorCode& ec) : NetSocket(), m_u64ConnTimer(0) {
         _CreateSocket(INVALID_SOCKET, true, false, &naAddr, ec);
     }
 
@@ -578,7 +631,7 @@ namespace ASL_NAMESPACE {
 
         if(m_funConnectEventHandler) {
             if(!NetSocket::BindEventHandler(nsNetService, NULL, [this](){
-                _OnConnect();
+                _OnConnect(false);
             })) {
                 return false;
             }
@@ -604,7 +657,7 @@ namespace ASL_NAMESPACE {
             ReadWriteHandler_t funWriteEventHandler) {
         if(m_funConnectEventHandler) {
             NetSocket::ModifyEventHandler(NULL, [this](){
-                _OnConnect();
+                _OnConnect(false);
             });
         } else {
             NetSocket::ModifyEventHandler(funReadEventHandler, funWriteEventHandler);
@@ -619,13 +672,26 @@ namespace ASL_NAMESPACE {
         return bRet ? 0 : ErrorCode::GetLastSystemError();
     }
 
-    void TCPSocket::AsyncConnect(const NetAddr& naAddr, ConnectEventHandler_t funConnectEventHandler) {
+    void TCPSocket::AsyncConnect(const NetAddr& naAddr, ConnectEventHandler_t funConnectEventHandler, int nTimeout) {
         m_funConnectEventHandler = funConnectEventHandler;
         m_hSocket.Connect(naAddr.GetAddr(), naAddr.GetAddrLen());
+        m_u64ConnTimer = m_pNetService->AddTimer(m_hSocket, nTimeout, [this]{_OnConnect(true);});
         ModifyEventHandler(m_funReadEventHandler, m_funWriteEventHandler);
     }
 
-    void TCPSocket::_OnConnect() {
+    void TCPSocket::_OnConnect(bool bTimeout) {
+        if(bTimeout) {
+            if(m_funConnectEventHandler) {
+                m_funConnectEventHandler(AslError(AECV_OpTimeout));
+                m_funConnectEventHandler = ConnectEventHandler_t();
+            }
+            ModifyEventHandler(m_funReadEventHandler, m_funWriteEventHandler);
+            return;
+        } else if(m_u64ConnTimer != 0) {
+            m_pNetService->DeleteTimer(m_u64ConnTimer);
+            m_u64ConnTimer = 0;
+        }
+
         ErrorCode ec;
         int error;
         socklen_t len = sizeof(error);

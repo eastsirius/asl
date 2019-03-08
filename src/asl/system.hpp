@@ -92,6 +92,12 @@ namespace ASL_NAMESPACE {
 		AECV_Reconnect,
 		AECV_ConnectFailed,
 		AECV_BindSocketError,
+		AECV_ParamError,
+		AECV_AllocMemoryFailed,
+		AECV_SerialFailed,
+		AECV_ParseFailed,
+		AECV_SendFailed,
+		AECV_RecvFailed,
 	};
 
 	/**

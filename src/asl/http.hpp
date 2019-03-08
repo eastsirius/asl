@@ -523,4 +523,76 @@ namespace ASL_NAMESPACE {
     protected:
         HttpHandlerPtr_t m_pHandler;
     };
+
+    typedef std::shared_ptr<class HttpClient> HttpClientPtr_t;
+
+    /**
+     * @brief Http客户端
+     */
+    class HttpClient : public NoCopyable {
+    public:
+        HttpClient();
+        ~HttpClient();
+
+        typedef std::function<void(const HttpResponse& hrResp, ErrorCode ec)> ResponseHandler_t;
+
+    public:
+        /**
+         * @brief 关闭客户端
+         */
+        void Close();
+
+    public:
+        /**
+         * @brief 异步调用
+         * @param nsNetService 绑定传输服务
+         * @param szAddr 服务地址
+         * @param hrReq 请求参数
+         * @param funHandler 结果回调
+         * @param nTimeout 毫秒超时时间
+         * @return 成功返回客户端实例，失败返回空指针
+         */
+        static HttpClientPtr_t AsyncCall(NetService& nsNetService, const char* szAddr,
+                const HttpRequest& hrReq, ResponseHandler_t funHandler, int nTimeout = 300000);
+
+        /**
+         * @brief 异步调用2
+         * @param nsNetService 绑定传输服务
+         * @param szMethod 请求方法
+         * @param szUrl 请求地址
+         * @param funHandler 结果回调
+         * @param nTimeout 毫秒超时时间
+         * @param pBody 请求数据
+         * @param nBodySize 请求数据长度
+         * @return 成功返回客户端实例，失败返回空指针
+         */
+        static HttpClientPtr_t AsyncCall2(NetService& nsNetService, const char* szMethod, const char* szUrl,
+                ResponseHandler_t funHandler, const char* pBody = NULL, int nBodySize = 0, int nTimeout = 300000);
+
+    private:
+        /**
+         * @brief 异步调用
+         * @param nsNetService 绑定传输服务
+         * @param szAddr 服务地址
+         * @param hrReq 请求参数
+         * @param funHandler 结果回调
+         * @param nTimeout 毫秒超时时间
+         * @return 返回执行结果
+         */
+        bool _AsyncCall(NetService& nsNetService, const char* szAddr,
+                const HttpRequest& hrReq, ResponseHandler_t funHandler, int nTimeout);
+
+        /**
+         * @brief 响应数据解析
+         * @param pData 数据指针
+         * @param nSize 数据长度
+         * @param ec 错误码
+         * @param funHandler 结果回调
+         * @return 解析完成返回true，否则返回false
+         */
+        bool _OnResponseData(const uint8_t* pData, int nSize, ErrorCode ec, ResponseHandler_t funHandler);
+
+    private:
+        TcpRpcClientPtr_t m_pClient;    ///< RPC客户端
+    };
 }

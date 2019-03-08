@@ -517,4 +517,102 @@ namespace ASL_NAMESPACE {
 
         return _SendData(pSocket, buf.GetBuffer(), nDataSize, 10000);
     }
+
+
+    HttpClient::HttpClient() {
+	}
+
+    HttpClient::~HttpClient() {
+	    Close();
+	}
+
+    void HttpClient::Close() {
+	    if(m_pClient) {
+	        m_pClient->Close();
+	        m_pClient.reset();
+	    }
+	}
+
+    HttpClientPtr_t HttpClient::AsyncCall(NetService& nsNetService, const char* szAddr,
+            const HttpRequest& hrReq, ResponseHandler_t funHandler, int nTimeout) {
+	    auto pClient = std::make_shared<HttpClient>();
+	    if(!pClient->_AsyncCall(nsNetService, szAddr, hrReq, funHandler, nTimeout)) {
+	        return NULL;
+	    }
+
+	    return pClient;
+	}
+
+    HttpClientPtr_t HttpClient::AsyncCall2(NetService& nsNetService, const char* szMethod, const char* szUrl,
+	        ResponseHandler_t funHandler, const char* pBody, int nBodySize, int nTimeout) {
+        Url url(szUrl);
+        if(url.IsEmpty()) {
+            funHandler(HttpResponse(), AslError(AECV_Error));
+            return NULL;
+        }
+
+        HttpRequest req;
+        req.SetMethod(szMethod);
+        req.SetUrl(url.GetPath().c_str());
+        if(pBody != NULL && nBodySize > 0) {
+            req.SetBody(pBody, nBodySize);
+        }
+
+        std::string strAddr = url.GetHost() + std::to_string(url.GetPort());
+        return AsyncCall(nsNetService, strAddr.c_str(), req, funHandler, nTimeout);
+    }
+
+    bool HttpClient::_AsyncCall(NetService& nsNetService, const char* szAddr,
+            const HttpRequest& hrReq, ResponseHandler_t funHandler, int nTimeout) {
+        std::string strUrl = std::string("http://") + szAddr + "/index.html";
+        Url url(strUrl.c_str());
+        if(url.IsEmpty()) {
+            funHandler(HttpResponse(), AslError(AECV_ParamError));
+            return NULL;
+        }
+
+        Buffer buf(hrReq.GetBodyLength() + 16 * 1024);
+        if(!buf) {
+            funHandler(HttpResponse(), AslError(AECV_AllocMemoryFailed));
+            return NULL;
+        }
+
+        int ret = hrReq.Serial((char*)buf.GetBuffer(), buf.GetBufferSize());
+        if(ret <= 0) {
+            funHandler(HttpResponse(), AslError(AECV_SerialFailed));
+            return NULL;
+        }
+
+        NetAddr addr(url.GetHost().c_str(), url.GetPort());
+        m_pClient = TcpRpcClient::AsyncCall(nsNetService, addr, buf.GetBuffer(), ret, nTimeout,
+                [this, funHandler](const uint8_t* pData, int nSize, ErrorCode ec){
+            return _OnResponseData(pData, nSize, ec, funHandler);
+        });
+        if(!m_pClient) {
+            return false;
+        }
+
+        return true;
+	}
+
+    bool HttpClient::_OnResponseData(const uint8_t* pData, int nSize, ErrorCode ec, ResponseHandler_t funHandler) {
+        HttpResponse hrResp;
+
+	    if(ec) {
+	        funHandler(hrResp, ec);
+	        return true;
+	    }
+
+	    int ret = hrResp.Parse((const char*)pData, nSize);
+	    if(ret < 0) {
+            funHandler(hrResp, AslError(AECV_ParseFailed));
+            return true;
+	    } else if(ret == 0) {
+	        return false;
+	    }
+
+	    funHandler(hrResp, ErrorCode());
+
+	    return true;
+	}
 }

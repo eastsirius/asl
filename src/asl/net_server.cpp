@@ -156,4 +156,115 @@ namespace ASL_NAMESPACE {
         assert(nParsed <= pBuf->GetDataSize());
         pBuf->SkipData(nParsed);
     }
+
+
+    TcpRpcClient::TcpRpcClient() {
+    }
+
+    TcpRpcClient::~TcpRpcClient() {
+        Close();
+    }
+
+    void TcpRpcClient::Close() {
+        m_bfSendBuf.Release();
+        m_bfRecvBuf.Release();
+        m_funHandler = ResponseHandler_t();
+        if(m_pSocket) {
+            m_pSocket->Close();
+            m_pSocket.reset();
+        }
+    }
+
+    TcpRpcClientPtr_t TcpRpcClient::AsyncCall(NetService& nsNetService, const NetAddr& naAddr,
+            const uint8_t* pData, int nSize, int nTimeout, ResponseHandler_t funHandler) {
+        auto pClient = std::make_shared<TcpRpcClient>();
+        if(!pClient->_AsyncCall(nsNetService, naAddr, pData, nSize, nTimeout, funHandler)) {
+            pClient->Close();
+            return NULL;
+        }
+
+        return pClient;
+    }
+
+    bool TcpRpcClient::_AsyncCall(NetService& nsNetService, const NetAddr& naAddr, const uint8_t* pData,
+            int nSize, int nTimeout, ResponseHandler_t funHandler) {
+        m_funHandler = funHandler;
+        if(!m_bfSendBuf.AppendData(pData, nSize)) {
+            return false;
+        }
+
+        ErrorCode ec;
+        m_pSocket = std::make_shared<TCPSocket>(ec);
+        if(ec) {
+            _DoError(ec);
+            return false;
+        }
+        if(!m_pSocket->BindEventHandler(nsNetService, [this]{_OnRead();})) {
+            _DoError(AslError(AECV_BindSocketError));
+            return false;
+        }
+        m_pSocket->AsyncConnect(naAddr, [this](ErrorCode ec){
+            _OnConnect(ec);
+        }, nTimeout);
+
+        return true;
+    }
+
+    void TcpRpcClient::_OnConnect(ErrorCode ec) {
+        if(ec) {
+            _DoError(ec);
+        } else {
+            _DoSend();
+        }
+    }
+
+    void TcpRpcClient::_OnRead() {
+        if(!m_bfRecvBuf.RequestFreeSize(64 * 1024)) {
+            _DoError(AslError(AECV_AllocMemoryFailed));
+            return;
+        }
+
+        ErrorCode ec;
+        int ret = m_pSocket->Recv(m_bfRecvBuf.GetBuffer(m_bfRecvBuf.GetDataSize()),
+                m_bfRecvBuf.GetFreeSize(), ec);
+        if(ec) {
+            _DoError(ec);
+            return;
+        }
+        m_bfRecvBuf.AppendData(ret);
+
+        if(m_funHandler(m_bfRecvBuf.GetBuffer(), m_bfRecvBuf.GetDataSize(), ErrorCode())) {
+            Close();
+            return;
+        }
+    }
+
+    void TcpRpcClient::_OnWrite() {
+        _DoSend();
+    }
+
+    void TcpRpcClient::_DoError(ErrorCode ec) {
+        m_funHandler(NULL, 0, ec);
+        Close();
+    }
+
+    void TcpRpcClient::_DoSend() {
+        if(!m_pSocket) {
+            return;
+        }
+
+        ErrorCode ec;
+        int ret = m_pSocket->Send(m_bfSendBuf.GetBuffer(), m_bfSendBuf.GetDataSize(), ec, 0);
+        if(ec) {
+            _DoError(ec);
+            return;
+        }
+        m_bfSendBuf.SkipData(ret);
+
+        if(m_bfSendBuf.GetDataSize() > 0) {
+            m_pSocket->ModifyEventHandler([this](){_OnRead();}, [this](){_OnWrite();});
+        } else {
+            m_pSocket->ModifyEventHandler([this](){_OnRead();});
+        }
+    }
 }

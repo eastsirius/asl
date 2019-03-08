@@ -123,16 +123,40 @@ namespace ASL_NAMESPACE {
 	}
 
 	int Url::GetProtocolPort(const char* protocol) {
-		// TODO
-		if(strcasecmp(protocol, "rtsp") == 0) {
-			return 443;
-		} else if(strcasecmp(protocol, "rtspu") == 0) {
-			return 443;
-		} else if(strcasecmp(protocol, "http") == 0) {
-			return 80;
-		} else {
-			return 0;
+		static const struct {
+			const char* proto;
+			int port;
+		} s_lstProtos[] = {
+			{ "ftp",    21   },
+			{ "ssh",    22   },
+			{ "telnet", 23   },
+			{ "smtp",   25   },
+			{ "tftp",   69   },
+			{ "http",   80   },
+			{ "rtmpt",  80   },
+			{ "pop2",   109  },
+			{ "pop3",   110  },
+			{ "ntp",    123  },
+			{ "imap",   143  },
+			{ "https",  443  },
+			{ "rtmps",  443  },
+			{ "rtsp",   554  },
+			{ "rtspu",  554  },
+			{ "imaps",  993  },
+			{ "pop3s",  995  },
+			{ "rtmp",   1935 },
+			{ "sip",    5060 },
+			{ "sips",   5061 },
+			{ "",       0    }
+		};
+
+		for(int i = 0; s_lstProtos[i].port != 0; ++i) {
+			if(strcasecmp(protocol, s_lstProtos[i].proto) == 0) {
+				return s_lstProtos[i].port;
+			}
 		}
+
+		return 0;
 	}
 
 	std::string Url::UrlEncode(const char* src, bool upper_case) {
