@@ -9,6 +9,7 @@
 #include "asldef.hpp"
 #include <stdint.h>
 #include <time.h>
+#include <string>
 
 namespace ASL_NAMESPACE {
 	/**
@@ -198,6 +199,76 @@ namespace ASL_NAMESPACE {
 
 	private:
 		Time m_tBeginTime;
+	};
+
+	/**
+	 * @brief RFC3339时间格式支持
+	 */
+	class Rfc3339 {
+	public:
+		Rfc3339();
+
+	public:
+		/**
+		 * @brief 解析时间字符串
+		 * @param szStr 源字符串
+		 * @return 成功返回毫秒时间，失败返回负数
+		 */
+		int64_t Parse(const char* szStr);
+
+		/**
+		 * @brief 格式化时间字符串
+		 * @param nMilliSecTime 毫秒时间
+		 * @return 返回时间字符串
+		 */
+		std::string Print(int64_t nMilliSecTime);
+
+		/**
+		 * @brief 设置是否使用夏令时
+		 * @param bSummerTime 是否使用夏令时
+		 */
+		void SetSummerTime(bool bSummerTime);
+
+		/**
+		 * @brief 设置是否使用本地时间
+		 * @param bLocalTime true:使用本地时间;false:使用UTC时间
+		 */
+		void SetLocalTime(bool bLocalTime);
+
+		/**
+		 * @brief 判断是否为闰年
+		 * @param nYear 年份
+		 * @return 返回判断结果
+		 */
+		bool IsLeapYear(int nYear);
+
+	private:
+		/**
+		 * @brief 验证数据格式
+		 * @param strSrc 源字符串
+		 * @param bUtcOffset 返回是否为UTC时间
+		 * @return 返回执行结果
+		 */
+		bool _ValidateFormat(const std::string& strSrc, bool& bUtcOffset);
+
+		/**
+		 * @brief 验证数据值
+		 * @param nYear 年份
+		 * @param nMonth 月份
+		 * @param nDay 天
+		 * @param nHour 时
+		 * @param nMinute 分
+		 * @param nSecond 秒
+		 * @param nNumOffsetHour 年份偏移
+		 * @param nNumOffsetMinute 月份偏移
+		 * @return 返回执行结果
+		 */
+		bool _ValidateData(int nYear, int nMonth, int nDay, int nHour, int nMinute, int nSecond,
+				int nNumOffsetHour, int nNumOffsetMinute);
+
+	private:
+		bool m_bSummerTime;
+		bool m_bLocalTime;
 	};
 
 	/**

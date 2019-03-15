@@ -101,6 +101,216 @@ namespace ASL_NAMESPACE {
 	}
 
 
+	static const int minYear = 0;
+	static const int maxYear = 9999;
+	static const int minMonth = 1;
+	static const int maxMonth = 12;
+	static const int minDay = 1;
+	static const int maxDay[12] = {
+			31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+	};
+	static const int maxDayFebruaryLeapYear = 29;
+	static const int minHour = 0;
+	static const int maxHour = 23;
+	static const int minMinute = 0;
+	static const int maxMinute = 59;
+	static const int minSecond = 0;
+	static const int maxSecond = 59;
+	static const int minNumOffsetHour = -12;
+	static const int maxNumOffsetHour = 12;
+	static const char dateSeparation = '-';
+	static const char dateTimeSeparation = 'T';
+	static const char timeSeparation = ':';
+	static const char timeUtcOffset = 'Z';
+	static const char timeNumOffsetPlus = '+';
+	static const char timeNumOffsetMinus = '-';
+	static const int dateYearIndex = 4;
+	static const int dateMonthIndex = 7;
+	static const int dateTimeIndex = 10;
+	static const int timeHourIndex = 13;
+	static const int timeMinuteIndex = 16;
+	static const int timeSecondIndex = 19;
+	static const int timeNumOffsetIndex = 22;
+
+	Rfc3339::Rfc3339() : m_bSummerTime(false), m_bLocalTime(false) {
+	}
+
+	int64_t Rfc3339::Parse(const char* szStr) {
+		std::string rfc3339Date(szStr);
+
+		bool utcOffset = false;
+		if(!_ValidateFormat(rfc3339Date, utcOffset)) {
+			return -1;
+		}
+
+		int year = atoi(rfc3339Date.substr(0, dateYearIndex).c_str());
+		int month = atoi(rfc3339Date.substr(dateYearIndex + 1, dateMonthIndex - dateYearIndex - 1).c_str());
+		int day = atoi(rfc3339Date.substr(dateMonthIndex + 1, dateTimeIndex - dateMonthIndex - 1).c_str());
+		int hour = atoi(rfc3339Date.substr(dateTimeIndex + 1, timeHourIndex - dateTimeIndex - 1).c_str());
+		int minute = atoi(rfc3339Date.substr(timeHourIndex + 1, timeMinuteIndex - timeHourIndex - 1).c_str());
+		int second = atoi(rfc3339Date.substr(timeMinuteIndex + 1, timeSecondIndex - timeMinuteIndex - 1).c_str());
+
+		int numOffsetHour = 0;
+		int numOffsetMinute = 0;
+		if(false == utcOffset) {
+			numOffsetHour = atoi(rfc3339Date.substr(timeSecondIndex, timeNumOffsetIndex - timeSecondIndex).c_str());
+			numOffsetMinute = atoi(rfc3339Date.substr(timeNumOffsetIndex + 1).c_str());
+		}
+
+		if(!_ValidateData(year, month, day, hour, minute, second, numOffsetHour, numOffsetMinute)) {
+			return -1;
+		}
+
+		tm gt;
+		gt.tm_year = year - 1900;
+		gt.tm_mon = month - 1,
+		gt.tm_mday = day,
+		gt.tm_hour = hour;
+		gt.tm_min = minute;
+		gt.tm_sec = second;
+		if(utcOffset) {
+			gt.tm_hour -= numOffsetHour;
+		}
+
+		return 1000 * timegm(&gt);
+	}
+
+	std::string Rfc3339::Print(int64_t nMilliSecTime) {
+		time_t date = nMilliSecTime / 1000;
+		tm *gt;
+		gt = gmtime(&date);
+		int tmp = gt->tm_hour;
+		if(m_bLocalTime) {
+			tm *lt;
+			lt = localtime(&date);
+			char dateString[26];
+			snprintf(dateString, 26, "%04d%c%02d%c%02d%c%02d%c%02d%c%02d%+03d%c00",
+					 lt->tm_year + 1900,
+					 dateSeparation,
+					 lt->tm_mon + 1,
+					 dateSeparation,
+					 lt->tm_mday,
+					 dateTimeSeparation,
+					 lt->tm_hour,
+					 timeSeparation,
+					 lt->tm_min,
+					 timeSeparation,
+					 lt->tm_sec,
+					 (0 == lt->tm_hour) ? 24 - tmp : lt->tm_hour - tmp, // number offset
+					 timeSeparation
+			);
+			return std::string(dateString);
+		} else {
+			char dateString[25];
+			snprintf(dateString, 25, "%04d%c%02d%c%02d%c%02d%c%02d%c%02d%c",
+					 gt->tm_year + 1900,
+					 dateSeparation,
+					 gt->tm_mon + 1,
+					 dateSeparation,
+					 gt->tm_mday,
+					 dateTimeSeparation,
+					 gt->tm_hour,
+					 timeSeparation,
+					 gt->tm_min,
+					 timeSeparation,
+					 gt->tm_sec,
+					 timeUtcOffset
+			);
+			return std::string(dateString);
+		}
+	}
+
+	void Rfc3339::SetSummerTime(bool bSummerTime) {
+		m_bSummerTime = bSummerTime;
+	}
+
+	void Rfc3339::SetLocalTime(bool bLocalTime) {
+		m_bLocalTime = bLocalTime;
+	}
+
+	bool Rfc3339::IsLeapYear(int nYear) {
+		return (nYear % 4 == 0 && (nYear % 100 != 0 || nYear % 400 == 0));
+	}
+
+	bool Rfc3339::_ValidateFormat(const std::string& strSrc, bool& bUtcOffset) {
+		if(dateSeparation != strSrc.at(dateYearIndex)) {
+			return false;
+		}
+		if(dateSeparation != strSrc.at(dateMonthIndex)) {
+			return false;
+		}
+		if(dateTimeSeparation != strSrc.at(dateTimeIndex)) {
+			return false;
+		}
+		if(timeSeparation != strSrc.at(timeHourIndex)) {
+			return false;
+		}
+		if(timeSeparation != strSrc.at(timeMinuteIndex)) {
+			return false;
+		}
+
+		if(timeUtcOffset == strSrc.at(timeSecondIndex)) {
+			bUtcOffset = true;
+		}
+		else if(timeNumOffsetPlus == strSrc.at(timeSecondIndex)) {
+			bUtcOffset = false;
+		}
+		else if(timeNumOffsetMinus == strSrc.at(timeSecondIndex)) {
+			bUtcOffset = false;
+		}
+		else {
+			return false;
+		}
+
+		if(!bUtcOffset) {
+			if(timeSeparation != strSrc.at(timeNumOffsetIndex)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	bool Rfc3339::_ValidateData(int nYear, int nMonth, int nDay, int nHour, int nMinute, int nSecond,
+			int nNumOffsetHour, int nNumOffsetMinute) {
+		if((nYear < minYear) || (maxYear < nYear)) {
+			return false;
+		}
+		if((nMonth < minMonth) || (maxMonth < nMonth)) {
+			return false;
+		}
+		if(IsLeapYear(nYear) && (2 == nMonth)) {
+			if((nDay < minDay) || (maxDayFebruaryLeapYear < nDay)) {
+				return false;
+			}
+		}
+		if((nDay < minDay) || (maxDay[nMonth - 1] == nDay)) {
+			return false;
+		}
+
+		if((nHour < minHour) || (maxHour < nHour)) {
+			return false;
+		}
+		if((nMinute < minMinute) || (maxMinute < nMinute)) {
+			return false;
+		}
+		if((nSecond < minSecond) || (maxSecond < nSecond)) {
+			return false;
+		}
+
+		if((nNumOffsetHour < minNumOffsetHour) || (maxNumOffsetHour < nNumOffsetHour)) {
+			return false;
+		}
+		//if((numOffsetMinute < minMinute) || (maxMinute < numOffsetMinute)) {
+		//	return false;
+		//}
+		if(0 != nNumOffsetMinute) {
+			return false;
+		}
+
+		return true;
+	}
+
+
 	int64_t asl_get_ms_time() {
 		return asl_get_us_time() / 1000;
 	}
