@@ -268,6 +268,15 @@ namespace ASL_NAMESPACE {
 #endif
 	}
 
+	bool File::ResetFileSize(size_t nSize) {
+#ifdef WINDOWS
+		assert(false);
+		return false;
+#else
+		return ftruncate64(m_hHandle->ctx, nSize) == 0;
+#endif
+	}
+
 	time_t File::GetLastAccessTime() {
 #ifdef WINDOWS
 		BY_HANDLE_FILE_INFORMATION info = {0};

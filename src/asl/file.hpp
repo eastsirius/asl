@@ -102,6 +102,13 @@ namespace ASL_NAMESPACE {
 		size_t GetFileSize();
 
 		/**
+		 * @brief 重设文件大小
+		 * @param nSize 文件大小
+		 * @return 返回执行结果
+		 */
+		bool ResetFileSize(size_t nSize);
+
+		/**
 		 * @brief 获取最后读取时间
 		 * @return 返回最后读取时间
 		 */
