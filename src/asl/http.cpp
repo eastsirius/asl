@@ -487,7 +487,7 @@ namespace ASL_NAMESPACE {
     HttpServer::~HttpServer() {
     }
 
-    int HttpServer::_ParseData(TCPSocket* pSocket, uint8_t* pData, int nSize) {
+    int HttpServer::_ParseData(int64_t nConnId, uint8_t* pData, int nSize) {
         HttpRequest req;
         int nRet = req.Parse((char*)pData, nSize);
         if(nRet > 0) {
@@ -495,8 +495,8 @@ namespace ASL_NAMESPACE {
                 return -1;
             }
 
-            auto handler = [this, pSocket](const HttpResponse& hrResp) {
-                this->_SendResponse(hrResp, pSocket);
+            auto handler = [this, nConnId](const HttpResponse& hrResp) {
+                this->_SendResponse(nConnId, hrResp);
             };
             m_pHandler->HttpProc(req, handler);
         }
@@ -504,7 +504,7 @@ namespace ASL_NAMESPACE {
         return nRet;
     }
 
-    bool HttpServer::_SendResponse(const HttpResponse& hrResp, TCPSocket* pSocket) {
+    bool HttpServer::_SendResponse(int64_t nConnId, const HttpResponse& hrResp) {
 	    Buffer buf(hrResp.GetBodyLength() + 16 * 1024);
 	    if(!buf) {
 	        return false;
@@ -515,7 +515,7 @@ namespace ASL_NAMESPACE {
             return false;
         }
 
-        return _SendData(pSocket, buf.GetBuffer(), nDataSize, 10000);
+        return _SendData(nConnId, buf.GetBuffer(), nDataSize, 1000);
     }
 
 

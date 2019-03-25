@@ -17,6 +17,7 @@ namespace ASL_NAMESPACE {
 
     BaseTCPServer::BaseTCPServer(NetService& nsNetService)
             : NetServer(), m_nsNetService(nsNetService) {
+        m_nConnIdCount = rand();
     }
 
     BaseTCPServer::~BaseTCPServer() {
@@ -39,14 +40,14 @@ namespace ASL_NAMESPACE {
         _ReleaseListeners();
     }
 
-    bool BaseTCPServer::_SendData(TCPSocket* pSocket, const uint8_t* pData, int nSize, int nTimeout) {
-        m_mtxConnectionsLock.Lock();
-        bool bRet = m_mpConnections.find(pSocket) != m_mpConnections.end();
-        m_mtxConnectionsLock.Unlock();
-        if(!bRet) {
+    bool BaseTCPServer::_SendData(int64_t nConnId, const uint8_t* pData, int nSize, int nTimeout) {
+        auto pSession = _GetSession(nConnId, false);
+        if(!pSession) {
             return false;
         }
-        return pSocket->Send(pData, nSize, nTimeout) == nSize;
+
+        AutoLocker<Mutex> locker(pSession->mtxLock);
+        return pSession->pSocket->Send(pData, nSize, nTimeout) == nSize;
     }
 
     bool BaseTCPServer::_CreateListeners(const BaseTCPServerParam* pParam) {
@@ -97,13 +98,12 @@ namespace ASL_NAMESPACE {
         m_lstListeners.clear();
     }
 
-    void BaseTCPServer::_Disconnect(TCPSocket* pSocket) {
-        m_mtxConnectionsLock.Lock();
-        m_mpConnections.erase(pSocket);
-        m_mtxConnectionsLock.Unlock();
-
-        pSocket->Close();
-        delete pSocket;
+    void BaseTCPServer::_Disconnect(int64_t nConnId) {
+        auto pSession = _GetSession(nConnId, true);
+        if(pSession) {
+            AutoLocker<Mutex> locker(pSession->mtxLock);
+            pSession->pSocket->Close();
+        }
     }
 
     void BaseTCPServer::_OnListenerRead(TCPAcceptor* pAcceptor) {
@@ -118,8 +118,9 @@ namespace ASL_NAMESPACE {
             return;
         }
 
-        auto readHandler = [this, pSocket, pSession](){
-            this->_OnRead(pSocket, pSession.get());
+        int64_t nConnId = ++m_nConnIdCount;
+        auto readHandler = [this, nConnId](){
+            _OnRead(nConnId);
         };
         if(!pSocket->BindEventHandler(m_nsNetService, readHandler)) {
             pSocket->Close();
@@ -127,25 +128,33 @@ namespace ASL_NAMESPACE {
             return;
         }
 
-        m_mpConnections[pSocket] = pSession;
+        pSession->pSocket.reset(pSocket);
+        m_mpConnections[nConnId] = pSession;
     }
 
-    void BaseTCPServer::_OnRead(TCPSocket* pSocket, TCPConnSession* pSession) {
+    void BaseTCPServer::_OnRead(int64_t nConnId) {
+        auto pSession = _GetSession(nConnId, false);
+        if(!pSession) {
+            return;
+        }
+
         auto pBuf = &pSession->bfRecvBuffer;
         pBuf->RequestFreeSize(32 * 1024);
-        int nRet = pSocket->Recv(pBuf->GetBuffer(pBuf->GetDataSize()), pBuf->GetFreeSize());
+        pSession->mtxLock.Lock();
+        int nRet = pSession->pSocket->Recv(pBuf->GetBuffer(pBuf->GetDataSize()), pBuf->GetFreeSize());
+        pSession->mtxLock.Unlock();
         if(nRet <= 0) {
-            _Disconnect(pSocket);
+            _Disconnect(nConnId);
             return;
         }
         pBuf->AppendData(nRet);
 
         size_t nParsed = 0;
         while(nParsed < pBuf->GetDataSize()) {
-            nRet = _ParseData(pSocket, pBuf->GetBuffer(nParsed), pBuf->GetDataSize() - nParsed);
+            nRet = _ParseData(nConnId, pBuf->GetBuffer(nParsed), pBuf->GetDataSize() - nParsed);
             if(nRet < 0) {
                 //服务主动断开
-                _Disconnect(pSocket);
+                _Disconnect(nConnId);
                 return;
             } else if(nRet == 0) {
                 //数据不足
@@ -155,6 +164,22 @@ namespace ASL_NAMESPACE {
         }
         assert(nParsed <= pBuf->GetDataSize());
         pBuf->SkipData(nParsed);
+    }
+
+    BaseTCPServer::TCPConnSessionPtr_t BaseTCPServer::_GetSession(int64_t nConnId, bool bDelete) {
+        AutoLocker<Mutex> locker(m_mtxConnectionsLock);
+        auto iter = m_mpConnections.find(nConnId);
+        if(iter == m_mpConnections.end()) {
+            return NULL;
+        }
+
+        if(bDelete) {
+            auto ret = iter->second;
+            m_mpConnections.erase(iter);
+            return ret;
+        } else {
+            return iter->second;
+        }
     }
 
 

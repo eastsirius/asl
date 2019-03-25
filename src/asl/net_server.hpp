@@ -11,6 +11,7 @@
 #include "socket.hpp"
 #include "memory.hpp"
 #include "network.hpp"
+#include <atomic>
 
 namespace ASL_NAMESPACE {
     /**
@@ -63,6 +64,8 @@ namespace ASL_NAMESPACE {
          * @brief 连接上下文
          */
         struct TCPConnSession {
+            Mutex mtxLock;             ///< 同步锁
+            TCPSocketPtr_t pSocket;    ///< 套接字
             GrowthBuffer bfRecvBuffer; ///< 接收缓冲
         };
         typedef std::shared_ptr<TCPConnSession> TCPConnSessionPtr_t; ///< 连接上下文指针类型
@@ -83,22 +86,22 @@ namespace ASL_NAMESPACE {
     protected:
         /**
          * @brief 数据解析函数
-         * @param pSocket 套接字指针
+         * @param nConnId 连接ID
          * @param pData 数据指针
          * @param nSize 数据长度
          * @return 成功返回以解析长度，失败返回负数，数据不足返回0
          */
-        virtual int _ParseData(TCPSocket* pSocket, uint8_t* pData, int nSize) = 0;
+        virtual int _ParseData(int64_t nConnId, uint8_t* pData, int nSize) = 0;
 
         /**
          * @brief 发送数据
-         * @param pSocket 套接字
+         * @param nConnId 连接ID
          * @param pData 数据缓冲
          * @param nSize 数据长度
          * @param nTimeout 毫秒超时时间
          * @return 返回执行结果
          */
-        bool _SendData(TCPSocket* pSocket, const uint8_t* pData, int nSize, int nTimeout);
+        bool _SendData(int64_t nConnId, const uint8_t* pData, int nSize, int nTimeout);
 
         /**
          * @brief 创建监听器
@@ -114,9 +117,9 @@ namespace ASL_NAMESPACE {
 
         /**
          * @brief 断开连接
-         * @param pSocket 套接字
+         * @param nConnId 连接ID
          */
-        void _Disconnect(TCPSocket* pSocket);
+        void _Disconnect(int64_t nConnId);
 
         /**
          * @brief 监听器读事件处理函数
@@ -126,18 +129,25 @@ namespace ASL_NAMESPACE {
 
         /**
          * @brief 连接读事件处理函数
-         * @param pSocket 套接字
-         * @param pSession 连接上下文
+         * @param nConnId 连接ID
          */
-        void _OnRead(TCPSocket* pSocket, TCPConnSession* pSession);
+        void _OnRead(int64_t nConnId);
+
+        /**
+         * @brief 获取连接上下文
+         * @param nConnId 连接ID
+         * @param bDelete 是否从列表中删除
+         */
+        TCPConnSessionPtr_t _GetSession(int64_t nConnId, bool bDelete);
 
     protected:
         NetService& m_nsNetService;     ///< 网络传输服务
 
+        std::atomic_int_fast64_t m_nConnIdCount;    ///< ID计数器
         Mutex m_mtxListenersLock;   ///< 监听器列表锁
         std::vector<std::shared_ptr<TCPAcceptor> > m_lstListeners;  ///< 监听器列表
         Mutex m_mtxConnectionsLock; ///< 连接列表锁
-        std::map<TCPSocket*, TCPConnSessionPtr_t> m_mpConnections;  ///< 连接列表
+        std::map<int64_t, TCPConnSessionPtr_t> m_mpConnections;  ///< 连接列表
     };
 
     ASL_SHAREDPTR_PRE_DEF(TcpRpcClient);

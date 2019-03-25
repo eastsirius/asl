@@ -505,20 +505,20 @@ namespace ASL_NAMESPACE {
     protected:
         /**
          * @brief 数据解析函数
-         * @param pSocket 套接字指针
+         * @param nConnId 连接ID
          * @param pData 数据指针
          * @param nSize 数据长度
          * @return 成功返回以解析长度，失败返回负数，数据不足返回0
          */
-        virtual int _ParseData(TCPSocket* pSocket, uint8_t* pData, int nSize);
+        virtual int _ParseData(int64_t nConnId, uint8_t* pData, int nSize);
 
         /**
          * @brief 发送响应包
+         * @param nConnId 连接ID
 		 * @param hrResp 响应包
-         * @param pSocket 套接字指针
          * @return 返回执行结果
          */
-        bool _SendResponse(const HttpResponse& hrResp, TCPSocket* pSocket);
+        bool _SendResponse(int64_t nConnId, const HttpResponse& hrResp);
 
     protected:
         HttpHandlerPtr_t m_pHandler;
