@@ -24,6 +24,25 @@
 
 #define ASL_ONEPARAM(args1, ...) args1,##__VA_ARGS__
 
+#define ASL_INIT_ONCE_PROC(proc_name, init_proc, sleep_proc) \
+	static int proc_name { \
+		static int init_count = 0; \
+		static bool init_ok = false; \
+		static int init_ret = 0; \
+		\
+		int cnt = ++init_count; \
+		if(cnt == 1) { \
+			init_ret = init_proc; \
+			init_ok = true; \
+		} else { \
+			while(!init_ok) { \
+				sleep_proc; \
+			} \
+		} \
+		\
+		return init_ret; \
+	} \
+
 namespace ASL_NAMESPACE {
 	/**
 	 * @brief 取最大值
