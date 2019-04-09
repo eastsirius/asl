@@ -346,6 +346,7 @@ namespace ASL_NAMESPACE {
     class UDPSocket : public NetSocket {
     public:
         UDPSocket(ErrorCode& ec);
+        UDPSocket(SOCKET hSocket, ErrorCode& ec);
         UDPSocket(const NetAddr& naAddr, ErrorCode& ec);
         virtual ~UDPSocket();
 

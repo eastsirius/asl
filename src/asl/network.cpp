@@ -575,6 +575,10 @@ namespace ASL_NAMESPACE {
         _CreateSocket(INVALID_SOCKET, false, false, NULL, ec);
     }
 
+    UDPSocket::UDPSocket(SOCKET hSocket, ErrorCode& ec) : NetSocket() {
+        _CreateSocket(hSocket, false, false, NULL, ec);
+    }
+
     UDPSocket::UDPSocket(const NetAddr& naAddr, ErrorCode& ec) : NetSocket() {
         _CreateSocket(INVALID_SOCKET, false, false, &naAddr, ec);
     }
