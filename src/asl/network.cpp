@@ -685,6 +685,7 @@ namespace ASL_NAMESPACE {
 
     void TCPSocket::_OnConnect(bool bTimeout) {
         if(bTimeout) {
+            auto handler = m_funConnectEventHandler; // 维持上下文生命周期
             if(m_funConnectEventHandler) {
                 m_funConnectEventHandler(AslError(AECV_OpTimeout));
                 m_funConnectEventHandler = ConnectEventHandler_t();
