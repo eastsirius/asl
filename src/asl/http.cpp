@@ -536,7 +536,8 @@ namespace ASL_NAMESPACE {
     HttpClientPtr_t HttpClient::AsyncCall(NetService& nsNetService, const char* szAddr,
             const HttpRequest& hrReq, ResponseHandler_t funHandler, int nTimeout) {
 	    auto pClient = std::make_shared<HttpClient>();
-	    if(!pClient->_AsyncCall(nsNetService, szAddr, hrReq, funHandler, nTimeout)) {
+	    auto callback = [pClient, funHandler](const HttpResponse& hrResp, ErrorCode ec) {funHandler(hrResp, ec);};
+	    if(!pClient->_AsyncCall(nsNetService, szAddr, hrReq, callback, nTimeout)) {
 	        return NULL;
 	    }
 
@@ -554,11 +555,15 @@ namespace ASL_NAMESPACE {
         HttpRequest req;
         req.SetMethod(szMethod);
         req.SetUrl(url.GetPath().c_str());
+        req.SetConnectionField(false);
+        req.SetTimeField();
+        req.SetHeaderField("Content-Type", "Content-Type: application/x-www-form-urlencoded");
+        req.SetHeaderField("Host", "127.0.0.1");
         if(pBody != NULL && nBodySize > 0) {
             req.SetBody(pBody, nBodySize);
         }
 
-        std::string strAddr = url.GetHost() + std::to_string(url.GetPort());
+        std::string strAddr = url.GetHost() + ":" + std::to_string(url.GetPort());
         return AsyncCall(nsNetService, strAddr.c_str(), req, funHandler, nTimeout);
     }
 
@@ -568,19 +573,19 @@ namespace ASL_NAMESPACE {
         Url url(strUrl.c_str());
         if(url.IsEmpty()) {
             funHandler(HttpResponse(), AslError(AECV_ParamError));
-            return NULL;
+            return false;
         }
 
         Buffer buf(hrReq.GetBodyLength() + 16 * 1024);
         if(!buf) {
             funHandler(HttpResponse(), AslError(AECV_AllocMemoryFailed));
-            return NULL;
+            return false;
         }
 
         int ret = hrReq.Serial((char*)buf.GetBuffer(), buf.GetBufferSize());
         if(ret <= 0) {
             funHandler(HttpResponse(), AslError(AECV_SerialFailed));
-            return NULL;
+            return false;
         }
 
         NetAddr addr(url.GetHost().c_str(), url.GetPort());
@@ -589,6 +594,7 @@ namespace ASL_NAMESPACE {
             return _OnResponseData(pData, nSize, ec, funHandler);
         });
         if(!m_pClient) {
+            funHandler(HttpResponse(), AslError(AECV_Error));
             return false;
         }
 

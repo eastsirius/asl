@@ -198,34 +198,38 @@ namespace ASL_NAMESPACE {
         /**
          * @brief 连接事件处理函数
          * @param ec 错误码
+         * @param funHandler 结果回调
          */
-        void _OnConnect(ErrorCode ec);
+        void _OnConnect(ErrorCode ec, ResponseHandler_t funHandler);
 
         /**
          * @brief 读取事件处理函数
+         * @param funHandler 结果回调
          */
-        void _OnRead();
+        void _OnRead(ResponseHandler_t funHandler);
 
         /**
          * @brief 写入事件处理函数
+         * @param funHandler 结果回调
          */
-        void _OnWrite();
+        void _OnWrite(ResponseHandler_t funHandler);
 
         /**
          * @brief 错误处理
          * @param ec 错误码
+         * @param funHandler 结果回调
          */
-        void _DoError(ErrorCode ec);
+        void _DoError(ErrorCode ec, ResponseHandler_t funHandler);
 
         /**
          * @brief 发送操作
+         * @param funHandler 结果回调
          */
-        void _DoSend();
+        void _DoSend(ResponseHandler_t funHandler);
 
     private:
         Buffer m_bfSendBuf;             ///< 发送缓存
         GrowthBuffer m_bfRecvBuf;       ///< 接收缓存
-        ResponseHandler_t m_funHandler; ///< 响应处理函数
         TCPSocketPtr_t m_pSocket;       ///< 套接字
     };
 }

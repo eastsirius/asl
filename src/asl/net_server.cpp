@@ -193,7 +193,6 @@ namespace ASL_NAMESPACE {
     void TcpRpcClient::Close() {
         m_bfSendBuf.Release();
         m_bfRecvBuf.Release();
-        m_funHandler = ResponseHandler_t();
         if(m_pSocket) {
             m_pSocket->Close();
             m_pSocket.reset();
@@ -213,7 +212,9 @@ namespace ASL_NAMESPACE {
 
     bool TcpRpcClient::_AsyncCall(NetService& nsNetService, const NetAddr& naAddr, const uint8_t* pData,
             int nSize, int nTimeout, ResponseHandler_t funHandler) {
-        m_funHandler = funHandler;
+        if(!m_bfSendBuf.Create(nSize)) {
+            return false;
+        }
         if(!m_bfSendBuf.AppendData(pData, nSize)) {
             return false;
         }
@@ -221,31 +222,31 @@ namespace ASL_NAMESPACE {
         ErrorCode ec;
         m_pSocket = std::make_shared<TCPSocket>(ec);
         if(ec) {
-            _DoError(ec);
+            _DoError(ec, funHandler);
             return false;
         }
-        if(!m_pSocket->BindEventHandler(nsNetService, [this]{_OnRead();})) {
-            _DoError(AslError(AECV_BindSocketError));
+        if(!m_pSocket->BindEventHandler(nsNetService, [this, funHandler]{_OnRead(funHandler);})) {
+            _DoError(AslError(AECV_BindSocketError), funHandler);
             return false;
         }
-        m_pSocket->AsyncConnect(naAddr, [this](ErrorCode ec){
-            _OnConnect(ec);
+        m_pSocket->AsyncConnect(naAddr, [this, funHandler](ErrorCode ec){
+            _OnConnect(ec, funHandler);
         }, nTimeout);
 
         return true;
     }
 
-    void TcpRpcClient::_OnConnect(ErrorCode ec) {
+    void TcpRpcClient::_OnConnect(ErrorCode ec, ResponseHandler_t funHandler) {
         if(ec) {
-            _DoError(ec);
+            _DoError(ec, funHandler);
         } else {
-            _DoSend();
+            _DoSend(funHandler);
         }
     }
 
-    void TcpRpcClient::_OnRead() {
+    void TcpRpcClient::_OnRead(ResponseHandler_t funHandler) {
         if(!m_bfRecvBuf.RequestFreeSize(64 * 1024)) {
-            _DoError(AslError(AECV_AllocMemoryFailed));
+            _DoError(AslError(AECV_AllocMemoryFailed), funHandler);
             return;
         }
 
@@ -253,27 +254,27 @@ namespace ASL_NAMESPACE {
         int ret = m_pSocket->Recv(m_bfRecvBuf.GetBuffer(m_bfRecvBuf.GetDataSize()),
                 m_bfRecvBuf.GetFreeSize(), ec);
         if(ec) {
-            _DoError(ec);
+            _DoError(ec, funHandler);
             return;
         }
         m_bfRecvBuf.AppendData(ret);
 
-        if(m_funHandler(m_bfRecvBuf.GetBuffer(), m_bfRecvBuf.GetDataSize(), ErrorCode())) {
+        if(funHandler(m_bfRecvBuf.GetBuffer(), m_bfRecvBuf.GetDataSize(), ErrorCode())) {
             Close();
             return;
         }
     }
 
-    void TcpRpcClient::_OnWrite() {
-        _DoSend();
+    void TcpRpcClient::_OnWrite(ResponseHandler_t funHandler) {
+        _DoSend(funHandler);
     }
 
-    void TcpRpcClient::_DoError(ErrorCode ec) {
-        m_funHandler(NULL, 0, ec);
+    void TcpRpcClient::_DoError(ErrorCode ec, ResponseHandler_t funHandler) {
+        funHandler(NULL, 0, ec);
         Close();
     }
 
-    void TcpRpcClient::_DoSend() {
+    void TcpRpcClient::_DoSend(ResponseHandler_t funHandler) {
         if(!m_pSocket) {
             return;
         }
@@ -281,15 +282,15 @@ namespace ASL_NAMESPACE {
         ErrorCode ec;
         int ret = m_pSocket->Send(m_bfSendBuf.GetBuffer(), m_bfSendBuf.GetDataSize(), ec, 0);
         if(ec) {
-            _DoError(ec);
+            _DoError(ec, funHandler);
             return;
         }
         m_bfSendBuf.SkipData(ret);
 
         if(m_bfSendBuf.GetDataSize() > 0) {
-            m_pSocket->ModifyEventHandler([this](){_OnRead();}, [this](){_OnWrite();});
+            m_pSocket->ModifyEventHandler([this, funHandler](){_OnRead(funHandler);}, [this, funHandler](){_OnWrite(funHandler);});
         } else {
-            m_pSocket->ModifyEventHandler([this](){_OnRead();});
+            m_pSocket->ModifyEventHandler([this, funHandler](){_OnRead(funHandler);});
         }
     }
 }
