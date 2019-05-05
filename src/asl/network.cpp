@@ -709,9 +709,10 @@ namespace ASL_NAMESPACE {
             ec = AslError(AECV_ConnectFailed);
         }
 
-        if(m_funConnectEventHandler) {
-            m_funConnectEventHandler(ec);
-            m_funConnectEventHandler = ConnectEventHandler_t();
+        auto funConnectEvent = m_funConnectEventHandler;
+        m_funConnectEventHandler = ConnectEventHandler_t();
+        if(funConnectEvent) {
+            funConnectEvent(ec);
         }
         ModifyEventHandler(m_funReadEventHandler, m_funWriteEventHandler);
     }
