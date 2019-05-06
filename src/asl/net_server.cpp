@@ -195,7 +195,6 @@ namespace ASL_NAMESPACE {
         m_bfRecvBuf.Release();
         if(m_pSocket) {
             m_pSocket->Close();
-            m_pSocket.reset();
         }
     }
 
