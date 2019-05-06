@@ -202,7 +202,10 @@ namespace ASL_NAMESPACE {
     TcpRpcClientPtr_t TcpRpcClient::AsyncCall(NetService& nsNetService, const NetAddr& naAddr,
             const uint8_t* pData, int nSize, int nTimeout, ResponseHandler_t funHandler) {
         auto pClient = std::make_shared<TcpRpcClient>();
-        if(!pClient->_AsyncCall(nsNetService, naAddr, pData, nSize, nTimeout, funHandler)) {
+        auto callback = [pClient, funHandler](const uint8_t* pData, int nSize, ErrorCode ec) {
+            return funHandler(pData, nSize, ec);
+        };
+        if(!pClient->_AsyncCall(nsNetService, naAddr, pData, nSize, nTimeout, callback)) {
             pClient->Close();
             return NULL;
         }
