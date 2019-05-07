@@ -168,9 +168,9 @@ namespace ASL_NAMESPACE {
 		gt.tm_hour = hour;
 		gt.tm_min = minute;
 		gt.tm_sec = second;
-		if(utcOffset) {
+		//if(utcOffset) {
 			gt.tm_hour -= numOffsetHour;
-		}
+		//}
 
 		return 1000 * timegm(&gt);
 	}
