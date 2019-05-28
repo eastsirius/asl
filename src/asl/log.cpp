@@ -100,11 +100,11 @@ namespace ASL_NAMESPACE {
             int len, i;
 
             /* 格式化日志 */
-            sprintf(acBuffer, "%2.2d:%2.2d:%2.2d.%3.3d %s: %s(%d): ",
+            snprintf(acBuffer, ASL_LOG_MAX_LENGTH - 4, "%2.2d:%2.2d:%2.2d.%3.3d %s: %s(%d): ",
                     dt.GetHour(), dt.GetMinute(), dt.GetSecond(), dt.GetMillisecond(),
                     g_szLogLevelStrings[level], p, line);
             len = strlen(acBuffer);
-            vsprintf(acBuffer + len, fmt, args);
+            vsnprintf(acBuffer + len, ASL_LOG_MAX_LENGTH - 4 - len, fmt, args);
             len = strlen(acBuffer);
             strcpy(acBuffer + len, "\n");
             len = strlen(acBuffer);

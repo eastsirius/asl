@@ -37,7 +37,7 @@
 
 
 #define ASL_LOG_MAX_OUTPUT_NUM 16
-#define ASL_LOG_MAX_LENGTH 4096
+#define ASL_LOG_MAX_LENGTH (16 * 1024)
 
 
 namespace ASL_NAMESPACE {

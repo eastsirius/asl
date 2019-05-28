@@ -172,7 +172,7 @@ namespace ASL_NAMESPACE {
     }
 
     uint64_t NetService::AddTimer(int nTimout, Handler_t funHandler) {
-        AddTimer(INVALID_SOCKET, nTimout, funHandler);
+        return AddTimer(INVALID_SOCKET, nTimout, funHandler);
     }
 
     uint64_t NetService::AddTimer(SOCKET nSocket, int nTimout, Handler_t funHandler) {
@@ -634,7 +634,7 @@ namespace ASL_NAMESPACE {
         UnbindEventHandler();
 
         if(m_funConnectEventHandler) {
-            if(!NetSocket::BindEventHandler(nsNetService, NULL, [this](){
+            if(!NetSocket::BindEventHandler(nsNetService, ReadWriteHandler_t(), [this](){
                 _OnConnect(false);
             })) {
                 return false;
@@ -660,7 +660,7 @@ namespace ASL_NAMESPACE {
     void TCPSocket::ModifyEventHandler(ReadWriteHandler_t funReadEventHandler,
             ReadWriteHandler_t funWriteEventHandler) {
         if(m_funConnectEventHandler) {
-            NetSocket::ModifyEventHandler(NULL, [this](){
+            NetSocket::ModifyEventHandler(ReadWriteHandler_t(), [this](){
                 _OnConnect(false);
             });
         } else {

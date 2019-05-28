@@ -461,7 +461,7 @@ namespace ASL_NAMESPACE {
          * @brief 添加404句柄
          * @param funRequestHandler 句柄
          */
-        void Set404Handler(HttpRequestHandler_t funRequestHandler) {
+        void Set404Handle(HttpRequestHandler_t funRequestHandler) {
             Set404Handler(std::make_shared<FunctionHttpHandler>(funRequestHandler));
         }
 

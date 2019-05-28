@@ -5,6 +5,7 @@
  */
 
 #include "time.hpp"
+#include "utils.hpp"
 #ifdef WINDOWS
 #  include <windows.h>
 #else
@@ -173,7 +174,11 @@ namespace ASL_NAMESPACE {
 			gt.tm_hour -= numOffsetHour;
 		//}
 
+#ifdef WINDOWS
+		return 1000 * _mkgmtime(&gt);
+#else
 		return 1000 * timegm(&gt);
+#endif
 	}
 
 	std::string Rfc3339::Print(int64_t nMilliSecTime) {
