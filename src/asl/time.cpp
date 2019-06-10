@@ -145,6 +145,7 @@ namespace ASL_NAMESPACE {
 			return -1;
 		}
 
+
 		int year = atoi(rfc3339Date.substr(0, dateYearIndex).c_str());
 		int month = atoi(rfc3339Date.substr(dateYearIndex + 1, dateMonthIndex - dateYearIndex - 1).c_str());
 		int day = atoi(rfc3339Date.substr(dateMonthIndex + 1, dateTimeIndex - dateMonthIndex - 1).c_str());
@@ -239,22 +240,26 @@ namespace ASL_NAMESPACE {
 	}
 
 	bool Rfc3339::_ValidateFormat(const std::string& strSrc, bool& bUtcOffset) {
-		if(dateSeparation != strSrc.at(dateYearIndex)) {
+		if(strSrc.length() <= dateYearIndex || dateSeparation != strSrc.at(dateYearIndex)) {
 			return false;
 		}
-		if(dateSeparation != strSrc.at(dateMonthIndex)) {
+		if(strSrc.length() <= dateMonthIndex || dateSeparation != strSrc.at(dateMonthIndex)) {
 			return false;
 		}
-		if(dateTimeSeparation != strSrc.at(dateTimeIndex)) {
+		if(strSrc.length() <= dateTimeIndex || dateTimeSeparation != strSrc.at(dateTimeIndex)) {
 			return false;
 		}
-		if(timeSeparation != strSrc.at(timeHourIndex)) {
+		if(strSrc.length() <= timeHourIndex || timeSeparation != strSrc.at(timeHourIndex)) {
 			return false;
 		}
-		if(timeSeparation != strSrc.at(timeMinuteIndex)) {
+		if(strSrc.length() <= timeMinuteIndex || timeSeparation != strSrc.at(timeMinuteIndex)) {
 			return false;
 		}
 
+		if(strSrc.length() <= timeSecondIndex || strSrc.length() <= timeSecondIndex
+			|| strSrc.length() <= timeSecondIndex || strSrc.length() <= timeNumOffsetIndex) {
+			return false;
+		}
 		if(timeUtcOffset == strSrc.at(timeSecondIndex)) {
 			bUtcOffset = true;
 		}
