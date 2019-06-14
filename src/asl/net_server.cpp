@@ -259,6 +259,10 @@ namespace ASL_NAMESPACE {
             _DoError(ec, funHandler);
             return;
         }
+        if(ret <= 0) {
+            _DoError(AslError(AECV_RecvFailed), funHandler);
+            return;
+        }
         m_bfRecvBuf.AppendData(ret);
 
         if(funHandler(m_bfRecvBuf.GetBuffer(), m_bfRecvBuf.GetDataSize(), ErrorCode())) {
