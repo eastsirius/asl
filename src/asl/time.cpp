@@ -118,11 +118,14 @@ namespace ASL_NAMESPACE {
 	static const int maxMinute = 59;
 	static const int minSecond = 0;
 	static const int maxSecond = 59;
+	static const int minMilliSec = 0;
+	static const int maxMilliSec = 999;
 	static const int minNumOffsetHour = -12;
 	static const int maxNumOffsetHour = 12;
 	static const char dateSeparation = '-';
 	static const char dateTimeSeparation = 'T';
 	static const char timeSeparation = ':';
+	static const char msSeparation = '.';
 	static const char timeUtcOffset = 'Z';
 	static const char timeNumOffsetPlus = '+';
 	static const char timeNumOffsetMinus = '-';
@@ -140,11 +143,11 @@ namespace ASL_NAMESPACE {
 	int64_t Rfc3339::Parse(const char* szStr) {
 		std::string rfc3339Date(szStr);
 
+		bool bMilliSec = false;
 		bool utcOffset = false;
-		if(!_ValidateFormat(rfc3339Date, utcOffset)) {
+		if(!_ValidateFormat(rfc3339Date, bMilliSec, utcOffset)) {
 			return -1;
 		}
-
 
 		int year = atoi(rfc3339Date.substr(0, dateYearIndex).c_str());
 		int month = atoi(rfc3339Date.substr(dateYearIndex + 1, dateMonthIndex - dateYearIndex - 1).c_str());
@@ -152,15 +155,20 @@ namespace ASL_NAMESPACE {
 		int hour = atoi(rfc3339Date.substr(dateTimeIndex + 1, timeHourIndex - dateTimeIndex - 1).c_str());
 		int minute = atoi(rfc3339Date.substr(timeHourIndex + 1, timeMinuteIndex - timeHourIndex - 1).c_str());
 		int second = atoi(rfc3339Date.substr(timeMinuteIndex + 1, timeSecondIndex - timeMinuteIndex - 1).c_str());
+		int millisec = 0, mslen = 0;
+		if(bMilliSec) {
+			mslen = 4;
+			millisec = atoi(rfc3339Date.substr(timeSecondIndex + 1, mslen - 1).c_str());
+		}
 
 		int numOffsetHour = 0;
 		int numOffsetMinute = 0;
 		if(false == utcOffset) {
-			numOffsetHour = atoi(rfc3339Date.substr(timeSecondIndex, timeNumOffsetIndex - timeSecondIndex).c_str());
-			numOffsetMinute = atoi(rfc3339Date.substr(timeNumOffsetIndex + 1).c_str());
+			numOffsetHour = atoi(rfc3339Date.substr(timeSecondIndex + mslen, timeNumOffsetIndex - timeSecondIndex).c_str());
+			numOffsetMinute = atoi(rfc3339Date.substr(timeNumOffsetIndex + mslen + 1).c_str());
 		}
 
-		if(!_ValidateData(year, month, day, hour, minute, second, numOffsetHour, numOffsetMinute)) {
+		if(!_ValidateData(year, month, day, hour, minute, second, millisec, numOffsetHour, numOffsetMinute)) {
 			return -1;
 		}
 
@@ -176,22 +184,23 @@ namespace ASL_NAMESPACE {
 		//}
 
 #ifdef WINDOWS
-		return 1000 * _mkgmtime(&gt);
+		return 1000 * _mkgmtime(&gt) + millisec;
 #else
-		return 1000 * timegm(&gt);
+		return 1000 * timegm(&gt) + millisec;
 #endif
 	}
 
 	std::string Rfc3339::Print(int64_t nMilliSecTime) {
 		time_t date = nMilliSecTime / 1000;
+		int ms = nMilliSecTime % 1000;
 		tm *gt;
 		gt = gmtime(&date);
 		int tmp = gt->tm_hour;
 		if(m_bLocalTime) {
 			tm *lt;
 			lt = localtime(&date);
-			char dateString[26];
-			snprintf(dateString, 26, "%04d%c%02d%c%02d%c%02d%c%02d%c%02d%+03d%c00",
+			char dateString[32];
+			snprintf(dateString, 32, "%04d%c%02d%c%02d%c%02d%c%02d%c%02d%c%03d%+03d%c00",
 					 lt->tm_year + 1900,
 					 dateSeparation,
 					 lt->tm_mon + 1,
@@ -203,13 +212,15 @@ namespace ASL_NAMESPACE {
 					 lt->tm_min,
 					 timeSeparation,
 					 lt->tm_sec,
+					 msSeparation,
+					 ms,
 					 (0 == lt->tm_hour) ? 24 - tmp : lt->tm_hour - tmp, // number offset
 					 timeSeparation
 			);
 			return std::string(dateString);
 		} else {
-			char dateString[25];
-			snprintf(dateString, 25, "%04d%c%02d%c%02d%c%02d%c%02d%c%02d%c",
+			char dateString[32];
+			snprintf(dateString, 32, "%04d%c%02d%c%02d%c%02d%c%02d%c%02d%c%03d%c",
 					 gt->tm_year + 1900,
 					 dateSeparation,
 					 gt->tm_mon + 1,
@@ -221,6 +232,8 @@ namespace ASL_NAMESPACE {
 					 gt->tm_min,
 					 timeSeparation,
 					 gt->tm_sec,
+					 msSeparation,
+					 ms,
 					 timeUtcOffset
 			);
 			return std::string(dateString);
@@ -239,7 +252,7 @@ namespace ASL_NAMESPACE {
 		return (nYear % 4 == 0 && (nYear % 100 != 0 || nYear % 400 == 0));
 	}
 
-	bool Rfc3339::_ValidateFormat(const std::string& strSrc, bool& bUtcOffset) {
+	bool Rfc3339::_ValidateFormat(const std::string& strSrc, bool& bMilliSec, bool& bUtcOffset) {
 		if(strSrc.length() <= dateYearIndex || dateSeparation != strSrc.at(dateYearIndex)) {
 			return false;
 		}
@@ -256,25 +269,36 @@ namespace ASL_NAMESPACE {
 			return false;
 		}
 
-		if(strSrc.length() <= timeSecondIndex || strSrc.length() <= timeSecondIndex
-			|| strSrc.length() <= timeSecondIndex || strSrc.length() <= timeNumOffsetIndex) {
+		int nMsLen = 0;
+		if(strSrc.length() <= timeSecondIndex) {
 			return false;
 		}
-		if(timeUtcOffset == strSrc.at(timeSecondIndex)) {
+		if(msSeparation == strSrc.at(timeSecondIndex)) {
+			bMilliSec = true;
+			nMsLen = 4;
+		}
+
+		if(strSrc.length() <= timeSecondIndex + nMsLen) {
+			return false;
+		}
+		if(timeUtcOffset == strSrc.at(timeSecondIndex + nMsLen)) {
 			bUtcOffset = true;
 		}
-		else if(timeNumOffsetPlus == strSrc.at(timeSecondIndex)) {
-			bUtcOffset = false;
-		}
-		else if(timeNumOffsetMinus == strSrc.at(timeSecondIndex)) {
-			bUtcOffset = false;
-		}
 		else {
-			return false;
+			if(strSrc.length() <= timeNumOffsetIndex + nMsLen) {
+				return false;
+			}
+			if(timeNumOffsetPlus == strSrc.at(timeSecondIndex + nMsLen)) {
+				bUtcOffset = false;
+			} else if(timeNumOffsetMinus == strSrc.at(timeSecondIndex + nMsLen)) {
+				bUtcOffset = false;
+			} else {
+				return false;
+			}
 		}
 
 		if(!bUtcOffset) {
-			if(timeSeparation != strSrc.at(timeNumOffsetIndex)) {
+			if(timeSeparation != strSrc.at(timeNumOffsetIndex + nMsLen)) {
 				return false;
 			}
 		}
@@ -282,7 +306,7 @@ namespace ASL_NAMESPACE {
 	}
 
 	bool Rfc3339::_ValidateData(int nYear, int nMonth, int nDay, int nHour, int nMinute, int nSecond,
-			int nNumOffsetHour, int nNumOffsetMinute) {
+			int nMilliSec, int nNumOffsetHour, int nNumOffsetMinute) {
 		if((nYear < minYear) || (maxYear < nYear)) {
 			return false;
 		}
@@ -305,6 +329,9 @@ namespace ASL_NAMESPACE {
 			return false;
 		}
 		if((nSecond < minSecond) || (maxSecond < nSecond)) {
+			return false;
+		}
+		if((nMilliSec < minMilliSec) || (maxMilliSec < nMilliSec)) {
 			return false;
 		}
 

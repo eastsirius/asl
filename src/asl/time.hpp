@@ -246,10 +246,11 @@ namespace ASL_NAMESPACE {
 		/**
 		 * @brief 验证数据格式
 		 * @param strSrc 源字符串
+		 * @param bMilliSec 返回是否有毫秒
 		 * @param bUtcOffset 返回是否为UTC时间
 		 * @return 返回执行结果
 		 */
-		bool _ValidateFormat(const std::string& strSrc, bool& bUtcOffset);
+		bool _ValidateFormat(const std::string& strSrc, bool& bMilliSec, bool& bUtcOffset);
 
 		/**
 		 * @brief 验证数据值
@@ -259,12 +260,13 @@ namespace ASL_NAMESPACE {
 		 * @param nHour 时
 		 * @param nMinute 分
 		 * @param nSecond 秒
+		 * @param nMilliSec 毫秒
 		 * @param nNumOffsetHour 年份偏移
 		 * @param nNumOffsetMinute 月份偏移
 		 * @return 返回执行结果
 		 */
 		bool _ValidateData(int nYear, int nMonth, int nDay, int nHour, int nMinute, int nSecond,
-				int nNumOffsetHour, int nNumOffsetMinute);
+				int nMilliSec, int nNumOffsetHour, int nNumOffsetMinute);
 
 	private:
 		bool m_bSummerTime;
