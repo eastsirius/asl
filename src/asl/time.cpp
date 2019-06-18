@@ -199,6 +199,13 @@ namespace ASL_NAMESPACE {
 		if(m_bLocalTime) {
 			tm *lt;
 			lt = localtime(&date);
+			int offset = lt->tm_hour - tmp;
+			if(offset > 12) {
+				offset -= 24;
+			} else if(offset <= -12) {
+				offset += 24;
+			}
+
 			char dateString[32];
 			snprintf(dateString, 32, "%04d%c%02d%c%02d%c%02d%c%02d%c%02d%c%03d%+03d%c00",
 					 lt->tm_year + 1900,
@@ -214,7 +221,7 @@ namespace ASL_NAMESPACE {
 					 lt->tm_sec,
 					 msSeparation,
 					 ms,
-					 (0 == lt->tm_hour) ? 24 - tmp : lt->tm_hour - tmp, // number offset
+					 offset, // number offset
 					 timeSeparation
 			);
 			return std::string(dateString);
