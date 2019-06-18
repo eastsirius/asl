@@ -557,7 +557,7 @@ namespace ASL_NAMESPACE {
         req.SetUrl(url.GetPath().c_str());
         req.SetConnectionField(false);
         req.SetTimeField();
-        req.SetHeaderField("Content-Type", "Content-Type: application/x-www-form-urlencoded");
+        req.SetHeaderField("Content-Type", "application/json");
         req.SetHeaderField("Host", "127.0.0.1");
         if(pBody != NULL && nBodySize > 0) {
             req.SetBody(pBody, nBodySize);
