@@ -22,7 +22,7 @@ namespace ASL_NAMESPACE {
 	Time Time::GetTime() {
 #ifdef WINDOWS
 		SYSTEMTIME st;
-		::GetLocalTime(&st);
+		::GetSystemTime(&st);
 		st.wYear -= 369;
 		FILETIME ft;
 		::SystemTimeToFileTime(&st, &ft);
