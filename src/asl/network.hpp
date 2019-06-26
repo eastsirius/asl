@@ -188,6 +188,7 @@ namespace ASL_NAMESPACE {
         NetAddr(const char* szSocketName); // AF_UNIX 协议栈
 #endif
         NetAddr(const sockaddr* pAddr, int nLen);
+        ~NetAddr();
 
     public:
         /**
@@ -237,6 +238,13 @@ namespace ASL_NAMESPACE {
          * @return 返回格式化后字符串
          */
         std::string ToString() const;
+
+        /**
+         * @brief 清空地址
+         */
+        void Clear();
+
+        NetAddr& operator=(const NetAddr& rhs);
 
     private:
         /**

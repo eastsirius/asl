@@ -350,7 +350,7 @@ namespace ASL_NAMESPACE {
 
     NetAddr::NetAddr(const NetAddr& naAddr) {
         _Init();
-        memcpy(m_pContext, naAddr.m_pContext, sizeof(NetAddrContext_t));
+        *this = naAddr;
     }
 
     NetAddr::NetAddr(uint32_t dwIP, uint16_t wPort) {
@@ -384,6 +384,12 @@ namespace ASL_NAMESPACE {
         _Init();
         assert(nLen <= (int)sizeof(*m_pContext));
         memcpy(m_pContext, pAddr, nLen);
+    }
+
+    NetAddr::~NetAddr() {
+        if(m_pContext) {
+            free(m_pContext);
+        }
     }
 
     sockaddr* NetAddr::GetAddr() {
@@ -455,6 +461,15 @@ namespace ASL_NAMESPACE {
         }
 
         return "";
+    }
+
+    void NetAddr::Clear() {
+        memset(m_pContext, 0, sizeof(NetAddrContext_t));
+        m_pContext->addr_in.sin_family = AF_INET;
+    }
+
+    NetAddr& NetAddr::operator=(const NetAddr& rhs) {
+        memcpy(m_pContext, rhs.m_pContext, sizeof(NetAddrContext_t));
     }
 
     void NetAddr::_Init() {
