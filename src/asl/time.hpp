@@ -36,6 +36,12 @@ namespace ASL_NAMESPACE {
 		 */
 		static Time GetTime();
 
+		/**
+		 * @brief 获取微秒系统时钟时间
+		 * @return 返回微秒系统时钟时间
+		 */
+		static Time GetTickTime();
+
 	private:
 		int64_t m_s64MicrosecTime;
 	};
@@ -284,4 +290,16 @@ namespace ASL_NAMESPACE {
 	 * @brief 返回微秒时间值
 	 */
 	int64_t asl_get_us_time();
+
+	/**
+	 * @class 获取毫秒系统时钟时间值
+	 * @brief 返回毫秒系统时钟时间值
+	 */
+	int64_t asl_get_ms_tick_time();
+
+	/**
+	 * @class 获取微秒系统时钟时间值
+	 * @brief 返回微秒系统时钟时间值
+	 */
+	int64_t asl_get_us_tick_time();
 }

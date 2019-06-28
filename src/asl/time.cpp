@@ -34,6 +34,14 @@ namespace ASL_NAMESPACE {
 #endif
 	}
 
+	Time Time::GetTickTime() {
+#ifdef WINDOWS
+		return ::GetTickCount64() * 1000L;
+#else
+		return GetTime();
+#endif
+	}
+
 
 	Datetime::Datetime() {
 		m_nYear = 0;
@@ -87,7 +95,7 @@ namespace ASL_NAMESPACE {
 	}
 
 	void Timer::Restart() {
-		m_tBeginTime = Time::GetTime();
+		m_tBeginTime = Time::GetTickTime();
 	}
 
 	int64_t Timer::SecTime() const {
@@ -99,7 +107,7 @@ namespace ASL_NAMESPACE {
 	}
 
 	int64_t Timer::MicrosecTime() const {
-		return Time::GetTime().Value() - m_tBeginTime.Value();
+		return Time::GetTickTime().Value() - m_tBeginTime.Value();
 	}
 
 
@@ -285,14 +293,13 @@ namespace ASL_NAMESPACE {
 			nMsLen = 4;
 		}
 
-		if(strSrc.length() <= timeSecondIndex + nMsLen) {
+		if((int)strSrc.length() <= timeSecondIndex + nMsLen) {
 			return false;
 		}
 		if(timeUtcOffset == strSrc.at(timeSecondIndex + nMsLen)) {
 			bUtcOffset = true;
-		}
-		else {
-			if(strSrc.length() <= timeNumOffsetIndex + nMsLen) {
+		} else {
+			if((int)strSrc.length() <= timeNumOffsetIndex + nMsLen) {
 				return false;
 			}
 			if(timeNumOffsetPlus == strSrc.at(timeSecondIndex + nMsLen)) {
@@ -362,5 +369,13 @@ namespace ASL_NAMESPACE {
 
 	int64_t asl_get_us_time() {
 		return Time::GetTime().Value();
+	}
+
+	int64_t asl_get_ms_tick_time() {
+		return asl_get_us_tick_time() / 1000;
+	}
+
+	int64_t asl_get_us_tick_time() {
+		return Time::GetTickTime().Value();
 	}
 }
