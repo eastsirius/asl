@@ -468,8 +468,9 @@ namespace ASL_NAMESPACE {
         m_pContext->addr_in.sin_family = AF_INET;
     }
 
-    NetAddr& NetAddr::operator=(const NetAddr& rhs) {
+    const NetAddr& NetAddr::operator=(const NetAddr& rhs) {
         memcpy(m_pContext, rhs.m_pContext, sizeof(NetAddrContext_t));
+		return *this;
     }
 
     void NetAddr::_Init() {

@@ -244,7 +244,7 @@ namespace ASL_NAMESPACE {
          */
         void Clear();
 
-        NetAddr& operator=(const NetAddr& rhs);
+        const NetAddr& operator=(const NetAddr& rhs);
 
     private:
         /**
