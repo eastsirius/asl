@@ -236,12 +236,14 @@ namespace ASL_NAMESPACE {
         if(ret < 0) {
             Thread::Sleep(nTimeout);
         } else if(ret > 0) {
-            for(auto iter = m_mpReadHandlerMap.begin(); iter != m_mpReadHandlerMap.end(); ++iter) {
+			auto readMap = m_mpReadHandlerMap;
+			auto writeMap = m_mpWriteHandlerMap;
+            for(auto iter = readMap.begin(); iter != readMap.end(); ++iter) {
                 if(FD_ISSET(iter->first, &readSet)) {
                     _DoEvent(iter->first, true);
                 }
             }
-            for(auto iter = m_mpWriteHandlerMap.begin(); iter != m_mpWriteHandlerMap.end(); ++iter) {
+            for(auto iter = writeMap.begin(); iter != writeMap.end(); ++iter) {
                 if(FD_ISSET(iter->first, &writeSet)) {
                     _DoEvent(iter->first, false);
                 }
