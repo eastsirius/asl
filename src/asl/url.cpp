@@ -77,6 +77,20 @@ namespace ASL_NAMESPACE {
 			temp = std::string(temp.begin() + path_end_pos + 1, temp.end());
 		}
 
+		if(temp != "") {
+			std::vector<std::string> attrs;
+			SplitAttr(attrs, temp.c_str());
+			for(auto iter = attrs.begin(); iter != attrs.end(); ++iter) {
+				auto pos = iter->find_first_of("=");
+				if(pos == std::string::npos) {
+					continue;
+				}
+
+				m_mpAttrs[std::string(iter->begin(), iter->begin() + pos)] =
+						std::string(iter->begin() + pos + 1, iter->end());
+			}
+		}
+
 		m_strUrl = url;
 		m_strProtocol = protocol;
 		m_strHost = host;
@@ -251,6 +265,28 @@ namespace ASL_NAMESPACE {
 			}
 			if(lhs != "") {
 				dirs.push_back(lhs);
+			}
+			p = rhs;
+		} while(pos != std::string::npos);
+	}
+
+	void Url::SplitAttr(std::vector<std::string>& attrs, const char* str) {
+		std::string p(str);
+		attrs.clear();
+
+		std::string::size_type pos;
+		std::string lhs, rhs;
+		do {
+			pos = p.find_first_of("&");
+			if(pos == std::string::npos) {
+				lhs = p;
+				rhs = "";
+			} else {
+				lhs = std::string(p.begin(), p.begin() + pos);
+				rhs = std::string(p.begin() + pos + 1, p.end());
+			}
+			if(lhs != "") {
+				attrs.push_back(lhs);
 			}
 			p = rhs;
 		} while(pos != std::string::npos);

@@ -135,6 +135,13 @@ namespace ASL_NAMESPACE {
 		 */
 		static void SplitPath(std::vector<std::string>& dirs, const char* path);
 
+		/**
+		 * @brief 分割请求参数
+		 * @param attrs 返回参数对列表
+		 * @param str 源字符串
+		 */
+		static void SplitAttr(std::vector<std::string>& attrs, const char* str);
+
 	private:
 		std::string m_strUrl;		///< 源URL
 
