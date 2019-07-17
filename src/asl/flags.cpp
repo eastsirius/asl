@@ -189,7 +189,7 @@ namespace ASL_NAMESPACE {
     void Flags::Usage() {
         int nMaxSize = 0;
         for(auto iter = m_mpValues.begin(); iter != m_mpValues.end(); ++iter) {
-            int nSize = iter->second->GetKey().length() + iter->second->GetShortKey().length();
+            int nSize = (int)(iter->second->GetKey().length() + iter->second->GetShortKey().length());
             nMaxSize = asl_max(nSize, nMaxSize);
         }
 

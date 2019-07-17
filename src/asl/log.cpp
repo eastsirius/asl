@@ -103,11 +103,11 @@ namespace ASL_NAMESPACE {
             snprintf(acBuffer, ASL_LOG_MAX_LENGTH - 4, "%2.2d:%2.2d:%2.2d.%3.3d %s: %s(%d): ",
                     dt.GetHour(), dt.GetMinute(), dt.GetSecond(), dt.GetMillisecond(),
                     g_szLogLevelStrings[level], p, line);
-            len = strlen(acBuffer);
+            len = (int)strlen(acBuffer);
             vsnprintf(acBuffer + len, ASL_LOG_MAX_LENGTH - 4 - len, fmt, args);
-            len = strlen(acBuffer);
+            len = (int)strlen(acBuffer);
             strcpy(acBuffer + len, "\n");
-            len = strlen(acBuffer);
+            len = (int)strlen(acBuffer);
 
             g_loggers_lock.Lock();
             for(i = 0; i < g_output_num; ++i) {

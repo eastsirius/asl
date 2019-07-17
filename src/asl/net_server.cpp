@@ -61,7 +61,7 @@ namespace ASL_NAMESPACE {
             if(strAddr.find(":") == std::string::npos) {
                 nPort = atoi(strAddr.c_str());
             } else {
-                int nPos = strAddr.find(":");
+                auto nPos = strAddr.find(":");
                 strIP = std::string(strAddr.begin(), strAddr.begin() + nPos);
                 std::string strPort(strAddr.begin() + nPos + 1, strAddr.end());
                 nPort = atoi(strPort.c_str());
@@ -141,7 +141,7 @@ namespace ASL_NAMESPACE {
         auto pBuf = &pSession->bfRecvBuffer;
         pBuf->RequestFreeSize(32 * 1024);
         pSession->mtxLock.Lock();
-        int nRet = pSession->pSocket->Recv(pBuf->GetBuffer(pBuf->GetDataSize()), pBuf->GetFreeSize());
+        int nRet = pSession->pSocket->Recv(pBuf->GetBuffer(pBuf->GetDataSize()), (int)pBuf->GetFreeSize());
         pSession->mtxLock.Unlock();
         if(nRet <= 0) {
             _Disconnect(nConnId);
@@ -151,7 +151,7 @@ namespace ASL_NAMESPACE {
 
         size_t nParsed = 0;
         while(nParsed < pBuf->GetDataSize()) {
-            nRet = _ParseData(nConnId, pBuf->GetBuffer(nParsed), pBuf->GetDataSize() - nParsed);
+            nRet = _ParseData(nConnId, pBuf->GetBuffer(nParsed), (int)(pBuf->GetDataSize() - nParsed));
             if(nRet < 0) {
                 //服务主动断开
                 _Disconnect(nConnId);
@@ -254,7 +254,7 @@ namespace ASL_NAMESPACE {
 
         ErrorCode ec;
         int ret = m_pSocket->Recv(m_bfRecvBuf.GetBuffer(m_bfRecvBuf.GetDataSize()),
-                m_bfRecvBuf.GetFreeSize(), ec);
+			(int)m_bfRecvBuf.GetFreeSize(), ec);
         if(ec) {
             _DoError(ec, funHandler);
             return;
@@ -265,7 +265,7 @@ namespace ASL_NAMESPACE {
         }
         m_bfRecvBuf.AppendData(ret);
 
-        if(funHandler(m_bfRecvBuf.GetBuffer(), m_bfRecvBuf.GetDataSize(), ErrorCode())) {
+        if(funHandler(m_bfRecvBuf.GetBuffer(), (int)m_bfRecvBuf.GetDataSize(), ErrorCode())) {
             Close();
             return;
         }
@@ -286,7 +286,7 @@ namespace ASL_NAMESPACE {
         }
 
         ErrorCode ec;
-        int ret = m_pSocket->Send(m_bfSendBuf.GetBuffer(), m_bfSendBuf.GetDataSize(), ec, 0);
+        int ret = m_pSocket->Send(m_bfSendBuf.GetBuffer(), (int)m_bfSendBuf.GetDataSize(), ec, 0);
         if(ec) {
             _DoError(ec, funHandler);
             return;

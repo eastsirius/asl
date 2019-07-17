@@ -98,7 +98,7 @@ namespace ASL_NAMESPACE {
 				delete pNode;
 				return NULL;
 			}
-			parsed = pSrc - src + nRet;
+			parsed = (int)(pSrc - src + nRet);
 		} else {
 			if(err_pos) {
 				*err_pos = pSrc;
@@ -283,7 +283,7 @@ namespace ASL_NAMESPACE {
 		lstString.push_back(0);
 		m_strValue = &lstString[0];
 
-		return src - szBegin;
+		return (int)(src - szBegin);
 	}
 
 	int JsonString::_ParseHex(char src) {
@@ -409,7 +409,7 @@ namespace ASL_NAMESPACE {
 			m_nValue = from_string_cast<int64_t>(&lstString[0]);
 		}
 
-		return lstString.size() - 1;
+		return (int)lstString.size() - 1;
 	}
 
 
@@ -562,7 +562,7 @@ namespace ASL_NAMESPACE {
 
 			switch(*pSrc) {
 			case '}':
-				return pSrc + 1 - src;
+				return (int)(pSrc + 1 - src);
 				break;
 
 			case ',':
@@ -732,7 +732,7 @@ namespace ASL_NAMESPACE {
 
 			switch(*pSrc) {
 			case ']':
-				return pSrc + 1 - src;
+				return (int)(pSrc + 1 - src);
 				break;
 
 			case ',':

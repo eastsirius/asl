@@ -484,7 +484,7 @@ namespace ASL_NAMESPACE {
 		FD_ZERO(&readSet);
 		FD_SET(m_hSocket, &readSet);
 		timeval tv = { timeout / 1000, (timeout % 1000) * 1000 };
-		return select(m_hSocket + 1, &readSet, NULL, NULL, &tv);
+		return select((int)m_hSocket + 1, &readSet, NULL, NULL, &tv);
 	}
 
 	int Socket::WaitToWrite(int timeout) {
@@ -493,7 +493,7 @@ namespace ASL_NAMESPACE {
 		FD_ZERO(&writeSet);
 		FD_SET(m_hSocket, &writeSet);
 		timeval tv = { timeout / 1000, (timeout % 1000) * 1000 };
-		return select(m_hSocket + 1, NULL, &writeSet, NULL, &tv);
+		return select((int)m_hSocket + 1, NULL, &writeSet, NULL, &tv);
 	}
 
 	int Socket::LastSocketError() {

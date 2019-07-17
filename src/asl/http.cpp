@@ -131,7 +131,7 @@ namespace ASL_NAMESPACE {
          */
 		static int OnBody(http_parser* pParser, const char* pData, size_t sLen) {
             HttpHelper* pHelper = (HttpHelper*)pParser->data;
-            pHelper->m_hbHttp.SetBody(pData, sLen);
+            pHelper->m_hbHttp.SetBody(pData, (int)sLen);
 			return 0;
 		}
 
@@ -248,7 +248,7 @@ namespace ASL_NAMESPACE {
             _OnMethod(http_method_str((http_method)parser.method));
         }
 
-        return helper.IsParseOK() ? ret : ((int)ret == nLen ? 0 : -1);
+        return helper.IsParseOK() ? (int)ret : ((int)ret == nLen ? 0 : -1);
     }
 
     int HttpBase::Serial(char* pBuf, int nSize, int nBodyLen) const {
@@ -272,14 +272,14 @@ namespace ASL_NAMESPACE {
         nFree -= size; \
 
         std::string strTemp = _SerialHeaderLine();
-        SUL_WRITEDATA(strTemp.c_str(), strTemp.length());
+        SUL_WRITEDATA(strTemp.c_str(), (int)strTemp.length());
 
         for(int i = 0; i < GetHeaderFieldCount(); ++i) {
             strTemp = GetHeaderFieldName(i);
             strTemp += ": ";
             strTemp += GetHeaderFieldValue(i);
             strTemp += "\r\n";
-            SUL_WRITEDATA(strTemp.c_str(), strTemp.length());
+            SUL_WRITEDATA(strTemp.c_str(), (int)strTemp.length());
         }
         SUL_WRITEDATA("\r\n", 2);
         if(pBody != NULL && nBodyLen > 0) {
@@ -299,7 +299,7 @@ namespace ASL_NAMESPACE {
 	}
 
     int HttpBase::GetHeaderFieldCount() const {
-        return m_mpHeaderValueMap.size();
+        return (int)m_mpHeaderValueMap.size();
     }
 
     const char* HttpBase::GetHeaderFieldValue(const char* szField) const {
@@ -510,7 +510,7 @@ namespace ASL_NAMESPACE {
 	        return false;
 	    }
 
-        int nDataSize = hrResp.Serial((char*)buf.GetBuffer(), buf.GetBufferSize());
+        int nDataSize = hrResp.Serial((char*)buf.GetBuffer(), (int)buf.GetBufferSize());
         if(nDataSize <= 0) {
             return false;
         }
@@ -582,7 +582,7 @@ namespace ASL_NAMESPACE {
             return false;
         }
 
-        int ret = hrReq.Serial((char*)buf.GetBuffer(), buf.GetBufferSize());
+        int ret = hrReq.Serial((char*)buf.GetBuffer(), (int)buf.GetBufferSize());
         if(ret <= 0) {
             funHandler(HttpResponse(), AslError(AECV_SerialFailed));
             return false;
