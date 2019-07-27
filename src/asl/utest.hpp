@@ -264,7 +264,7 @@ namespace ASL_NAMESPACE {
          * @return 返回测试用例数
          */
         int GetCaseNum() const {
-            return m_lstTestCases.size();
+            return (int)m_lstTestCases.size();
         }
 
         /**

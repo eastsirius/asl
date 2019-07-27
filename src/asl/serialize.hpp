@@ -226,7 +226,7 @@ namespace ASL_NAMESPACE {
 			BinSerializer<N>::DoWrite(buf, &len_len);
 			memcpy(buf + N, value, len);
 
-			return len + N;
+			return (int)len + N;
 		}
 	};
 

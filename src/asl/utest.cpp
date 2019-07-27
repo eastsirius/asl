@@ -175,7 +175,7 @@ namespace ASL_NAMESPACE {
         for(size_t i = 0; i < m_lstTestSuites.size(); ++i) {
             if(m_lstTestSuites[i].GetName() == suite
                 && m_lstTestSuites[i].IsCreated()) {
-                id = i;
+                id = (int)i;
                 break;
             }
         }
