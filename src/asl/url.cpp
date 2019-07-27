@@ -86,8 +86,12 @@ namespace ASL_NAMESPACE {
 					continue;
 				}
 
-				m_mpAttrs[std::string(iter->begin(), iter->begin() + pos)] =
-						std::string(iter->begin() + pos + 1, iter->end());
+				std::string key(iter->begin(), iter->begin() + pos);
+				std::string value(iter->begin() + pos + 1, iter->end());
+				key = UrlDecode(key.c_str());
+				value = UrlDecode(value.c_str());
+
+				m_mpAttrs[key] = value;
 			}
 		}
 
