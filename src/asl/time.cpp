@@ -332,7 +332,7 @@ namespace ASL_NAMESPACE {
 				return false;
 			}
 		}
-		if((nDay < minDay) || (maxDay[nMonth - 1] == nDay)) {
+		if((nDay < minDay) || (maxDay[nMonth - 1] < nDay)) {
 			return false;
 		}
 
