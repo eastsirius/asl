@@ -391,7 +391,11 @@ namespace ASL_NAMESPACE {
     }
 
     const char* HttpResponse::GetStateString() const {
-        return HttpHelper::HttpStateToString(GetState());
+	    if(m_strStateMsg != "") {
+	        return m_strStateMsg.c_str();
+	    } else {
+            return HttpHelper::HttpStateToString(GetState());
+	    }
     }
 
     std::string HttpResponse::_SerialHeaderLine() const {

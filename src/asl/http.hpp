@@ -285,17 +285,20 @@ namespace ASL_NAMESPACE {
         /**
          * @brief 设置HTTP状态码
          * @param nState HTTP状态码
+         * @param szMsg HTTP状态信息
          */
-        void SetState(int nState) {
+        void SetState(int nState, const char* szMsg = NULL) {
             m_nStateCode = nState;
+            m_strStateMsg = asl_safe_str(szMsg);
         }
 
         /**
          * @brief HTTP状态码解析相应函数
          * @param nState HTTP状态码
+         * @param szMsg HTTP状态信息
          */
-        virtual void _OnState(int nState) {
-            SetState(nState);
+        virtual void _OnState(int nState, const char* szMsg) {
+            SetState(nState, szMsg);
         }
 
 	protected:
@@ -307,6 +310,7 @@ namespace ASL_NAMESPACE {
 
 	private:
         int m_nStateCode; ///< HTTP状态码
+        std::string m_strStateMsg; ///< HTTP状态信息
 	};
 
     /**
