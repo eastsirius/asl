@@ -13,6 +13,23 @@
 #endif
 
 namespace ASL_NAMESPACE {
+#ifdef WINDOWS
+	static int64_t asl_win_get_1970_time_base() {
+		SYSTEMTIME st;
+		st.wYear = 1970;
+		st.wMonth = 1;
+		st.wDayOfWeek = 0;
+		st.wDay = 1;
+		st.wHour = 0;
+		st.wMinute = 0;
+		st.wSecond = 0;
+		st.wMilliseconds = 0;
+		FILETIME ft;
+		::SystemTimeToFileTime(&st, &ft);
+		return ((((uint64_t)ft.dwHighDateTime) << 32) + ft.dwLowDateTime) / 10;
+	}
+#endif
+
 	Time::Time() : m_s64MicrosecTime(0) {
 	}
 
@@ -21,12 +38,12 @@ namespace ASL_NAMESPACE {
 
 	Time Time::GetTime() {
 #ifdef WINDOWS
+		static int64_t time_base = asl_win_get_1970_time_base();
 		SYSTEMTIME st;
 		::GetSystemTime(&st);
-		st.wYear -= 369;
 		FILETIME ft;
 		::SystemTimeToFileTime(&st, &ft);
-		return Time(((((uint64_t)ft.dwHighDateTime) << 32) + ft.dwLowDateTime) / 10);
+		return Time(((((uint64_t)ft.dwHighDateTime) << 32) + ft.dwLowDateTime) / 10 - time_base);
 #else
 		timeval t;
 		gettimeofday(&t, 0);
