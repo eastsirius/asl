@@ -10,6 +10,7 @@
 #include <map>
 #include <vector>
 #include <cstring>
+#include <string>
 
 namespace ASL_NAMESPACE {
 	/**

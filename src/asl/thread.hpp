@@ -13,6 +13,7 @@
 #include <memory>
 #include <mutex>
 #include <thread>
+#include <functional>
 #include <condition_variable>
 
 namespace ASL_NAMESPACE {
