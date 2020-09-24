@@ -275,15 +275,19 @@ namespace ASL_NAMESPACE {
 
     void NetService::AsyncGetAddrInfo(const char* szName, const char* szService, const addrinfo* pReq,
             GetAddrInfoHandler_t funHandler) {
-        auto pSession = std::make_shared<GetAddrInfoSession>(szName, szService, pReq);
+        auto pSession = std::make_shared<GetAddrInfoSession>(szName, asl_safe_str(szService), pReq);
         pSession->funHandler = funHandler;
         m_lstGetAddrInfoSessionList.push_back(pSession);
 
         auto funThreadHandler = [pSession]() {
             addrinfo* pRet = NULL;
-            if(getaddrinfo(pSession->strName.c_str(), pSession->strName.c_str(),
-                    (addrinfo*)pSession->pReq, &pRet) == 0) {
+            int ret = getaddrinfo(pSession->strName.c_str(), pSession->strService == "" ? NULL : pSession->strService.c_str(),
+                (addrinfo*)pSession->pReq, &pRet);
+            if(ret == 0) {
                 pSession->pRet = pRet;
+            } else {
+                auto desc = new CustomErrorDesc(std::string(gai_strerror(ret)));
+                pSession->ecError = ErrorCode(ret, desc);
             }
             pSession->bOk = true;
         };
@@ -321,11 +325,11 @@ namespace ASL_NAMESPACE {
         for(auto iter = m_lstGetAddrInfoSessionList.begin();
             iter != m_lstGetAddrInfoSessionList.end();) {
             auto pSession = *iter;
-            if(pSession->pRet) {
-                pSession->funHandler((addrinfo*)pSession->pRet);
+            if(pSession->bOk) {
+                pSession->funHandler(pSession->ecError, (addrinfo*)pSession->pRet);
                 iter = m_lstGetAddrInfoSessionList.erase(iter);
             } else if(pSession->trTimer.MillisecTime() > 30000) {
-                pSession->funHandler(NULL);
+                pSession->funHandler(AslError(AECV_OpTimeout), NULL);
                 iter = m_lstGetAddrInfoSessionList.erase(iter);
             } else {
                 ++iter;

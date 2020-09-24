@@ -46,6 +46,14 @@ namespace ASL_NAMESPACE {
 
 	public:
 		/**
+		 * @brief 获取错误类型
+		 * @return 返回错误类型
+		 */
+		virtual const char* GetType() const {
+			return "custom";
+		}
+
+		/**
 		 * @brief 获取错误信息
 		 * @param ec 错误码
 		 * @return 返回错误信息

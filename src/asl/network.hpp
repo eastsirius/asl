@@ -29,7 +29,7 @@ namespace ASL_NAMESPACE {
 
         typedef std::function<void()> Handler_t; ///< 事件句柄
         typedef std::map<SOCKET, Handler_t> HandlerMap_t; ///< 事件句柄影射表
-        typedef std::function<void(const addrinfo* pRet)> GetAddrInfoHandler_t; ///< 域名解析结果句柄
+        typedef std::function<void(ErrorCode ec, const addrinfo* pRet)> GetAddrInfoHandler_t; ///< 域名解析结果句柄
 
         /**
          * @brief 计时器上下文
@@ -56,6 +56,7 @@ namespace ASL_NAMESPACE {
             std::string strService;
             void* pReq;
             void* pRet;
+            ErrorCode ecError;
             GetAddrInfoHandler_t funHandler;
         };
 
