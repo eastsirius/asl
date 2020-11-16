@@ -260,6 +260,7 @@ namespace ASL_NAMESPACE {
 								return -1;
 							}
 						}
+						_WriteUtf8(lstString, dwChar);
 						src += bDoubleValue ? 11 : 5;
 					} else {
 						if(err_pos) {
